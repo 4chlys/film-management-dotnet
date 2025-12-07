@@ -1,6 +1,5 @@
 namespace FilmManagement.UI.Web.Models.Film;
 
-public class EditFilmViewModel : BaseFilmViewModel
+public class EditFilmViewModel : BaseFilmFormViewModel
 {
-    public Guid ImdbId { get; set; }
 }

@@ -7,22 +7,21 @@ namespace FilmManagement.UI.Web.Models.Film;
 
 public abstract class BaseFilmViewModel
 {
+    public Guid ImdbId { get; set; }
+    
     [Required]
     [StringLength(100, MinimumLength = 3)]
+    [Display(Name = "Title")]
     public string Title { get; set; } = string.Empty;
     
-    [CustomValidation(typeof(EnumValidator), "DefinedValuesOnly")]
-    public Genre Genre { get; set; }
+    [Display(Name = "Genre")]
+    public string Genre { get; set; } = string.Empty;
     
     [DateRange(minYear: 1800, mustBePast: true)]
+    [Display(Name = "Release Date")]
     public DateTime ReleaseDate { get; set; }
     
     [Range(0, 10)]
+    [Display(Name = "Rating")]
     public double Rating { get; set; }
-
-    public Guid? DirectorId { get; set; }
-    public List<Guid> SelectedActorIds { get; set; } = new();
-    
-    public SelectList Directors { get; set; }
-    public SelectList Actors { get; set; }
 }

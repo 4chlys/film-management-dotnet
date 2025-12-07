@@ -1,5 +1,5 @@
 namespace FilmManagement.UI.Web.Models.Film;
 
-public class NewFilmViewModel : BaseFilmViewModel
+public class NewFilmViewModel : BaseFilmFormViewModel
 {
 }

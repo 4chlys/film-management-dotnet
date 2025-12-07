@@ -3,19 +3,35 @@
 <div class="card">
     <div class="card-body">
         <dl class="row">
-            <dt class="col-sm-3">Title</dt>
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Title)</dt>
             <dd class="col-sm-9">@Model.Title</dd>
-            <dt class="col-sm-3">Genre</dt>
-            <dd class="col-sm-9">@Model.Genre.ToString()</dd>
-            <dt class="col-sm-3">Release Date</dt>
+            
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Genre)</dt>
+            <dd class="col-sm-9">@Model.Genre</dd>
+            
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ReleaseDate)</dt>
             <dd class="col-sm-9">@Model.ReleaseDate.ToString("dd/MM/yyyy")</dd>
-            <dt class="col-sm-3">Rating</dt>
+            
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Rating)</dt>
             <dd class="col-sm-9">@Model.Rating.ToString("F1") / 10</dd>
-            <dt class="col-sm-3">Director</dt>
-            <dd class="col-sm-9">@(Model.Director?.Name ?? "unknown")</dd>
-            <dt class="col-sm-3">Actors</dt>
+            
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Director)</dt>
             <dd class="col-sm-9">
-                @if (Model.ActorFilms != null && Model.ActorFilms.Any())
+                @if (Model.Director != null)
+                {
+                    <a asp-controller="Director" asp-action="Details" asp-route-id="@Model.Director.ImdbId">
+                        @Model.Director.Name
+                    </a>
+                }
+                else
+                {
+                    <span class="text-muted">Unknown</span>
+                }
+            </dd>
+            
+            <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Actors)</dt>
+            <dd class="col-sm-9">
+                @if (Model.Actors != null && Model.Actors.Any())
                 {
                     <table class="table table-sm">
                         <thead>
@@ -27,14 +43,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var actorFilm in Model.ActorFilms)
+                            @foreach (var actor in Model.Actors)
                             {
                                 <tr>
-                                    <td>@actorFilm.Actor.Name</td>
-                                    <td>@actorFilm.Actor.DateOfBirth.ToString("dd/MM/yyyy")</td>
-                                    <td>@(actorFilm.ScreenTime?.ToString() ?? "unknown") min</td>
+                                    <td>@actor.Name</td>
+                                    <td>@actor.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                                    <td>@(actor.ScreenTime?.ToString() ?? "unknown") min</td>
                                     <td>
-                                        <a asp-controller="Actor" asp-action="Details" asp-route-id="@actorFilm.Actor.ImdbId">Details</a>
+                                        <a asp-controller="Actor" asp-action="Details" asp-route-id="@actor.ImdbId">Details</a>
                                     </td>
                                 </tr>
                             }

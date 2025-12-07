@@ -85,18 +85,40 @@ public class FilmController(IManager filmManager) : Controller
     public IActionResult Details(Guid id)
     {
         var film = filmManager.GetFilmWithActorsAndDirectors(id);
+    
+        if (film == null)
+        {
+            return NotFound();
+        }
 
-        var detailFilm = new DetailsFilmViewModel()
+        var detailFilm = new DetailsFilmViewModel
         {
             ImdbId = film.ImdbId,
-            Genre = film.Genre,
+            Title = film.Title,
+            Genre = GetGenreDisplayString(film.Genre),
             ReleaseDate = film.ReleaseDate,
             Rating = film.Rating,
-            DirectorId = film.Director.ImdbId,
-            SelectedActorIds = filmManager.GetActorsOfFilm(id).Select(a => a.ImdbId).ToList()
+            Director = film.Director != null 
+                ? new DetailsFilmViewModel.DirectorInfo 
+                { 
+                    ImdbId = film.Director.ImdbId,
+                    Name = film.Director.Name 
+                }
+                : null,
+            Actors = film.ActorFilms?
+                .Select(af => new DetailsFilmViewModel.ActorInfo
+                {
+                    ImdbId = af.Actor.ImdbId,
+                    Name = af.Actor.Name,
+                    DateOfBirth = af.Actor.DateOfBirth,
+                    ScreenTime = af.ScreenTime
+                })
+                .ToList() ?? new()
         };
+    
         return View(detailFilm);
     }
+
 
     [HttpGet]
     public IActionResult Edit(Guid id)
@@ -201,7 +223,7 @@ public class FilmController(IManager filmManager) : Controller
     public IActionResult Delete(Guid id)
     {
         var film = filmManager.GetFilm(id);
-        
+    
         if (film == null)
         {
             return NotFound();
@@ -211,10 +233,12 @@ public class FilmController(IManager filmManager) : Controller
         {
             ImdbId = film.ImdbId,
             Title = film.Title,
-            DirectorName = film.Director?.Name,
-            ReleaseYear = film.ReleaseDate.Year
+            Genre = GetGenreDisplayString(film.Genre),
+            ReleaseDate = film.ReleaseDate,
+            Rating = film.Rating,
+            DirectorName = film.Director?.Name ?? "Unknown"
         };
-        
+    
         return View(deleteFilm);
     }
 
@@ -222,13 +246,22 @@ public class FilmController(IManager filmManager) : Controller
     public IActionResult DeletePost(Guid id)
     {
         var film = filmManager.GetFilm(id);
-        
+    
         if (film == null)
         {
             return NotFound();
         }
-        
+    
         filmManager.RemoveFilm(film);
         return RedirectToAction("Index");
+    }
+    private string GetGenreDisplayString(Genre genre)
+    {
+        var genreList = Enum.GetValues(typeof(Genre))
+            .Cast<Genre>()
+            .Where(g => g != Genre.None && genre.HasFlag(g))
+            .Select(g => g.ToString());
+
+        return string.Join(", ", genreList);
     }
 }
