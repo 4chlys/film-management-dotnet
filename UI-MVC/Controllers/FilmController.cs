@@ -66,7 +66,7 @@ public class FilmController(IManager filmManager) : Controller
             director
         );
 
-        if (newFilm.SelectedActorIds == null || newFilm.SelectedActorIds.Count == 0) return RedirectToAction("Index");
+        if (newFilm.SelectedActorIds == null || newFilm.SelectedActorIds.Count == 0) return RedirectToAction("Details", new { Id = newFilm.ImdbId });
         foreach (var actorId in newFilm.SelectedActorIds)
         {
             try
@@ -79,7 +79,7 @@ public class FilmController(IManager filmManager) : Controller
             }
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction("Details", new { Id = newFilm.ImdbId });
     }
 
     public IActionResult Details(Guid id)
