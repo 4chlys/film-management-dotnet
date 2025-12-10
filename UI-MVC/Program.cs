@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using FilmManagement.BL;
 using FilmManagement.DAL;
 using FilmManagement.DAL.EF;
@@ -10,7 +11,8 @@ builder.Services.AddScoped<IRepository, EfRepository>();
 builder.Services.AddScoped<IManager, Manager>();
 
 builder.Services.AddControllersWithViews()
-    .AddXmlDataContractSerializerFormatters();
+    .AddXmlDataContractSerializerFormatters()
+    .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 
 var app = builder.Build();
 

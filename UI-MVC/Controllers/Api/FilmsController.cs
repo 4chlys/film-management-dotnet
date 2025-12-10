@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FilmManagement.UI.Web.Controllers.Api;
 
+[ApiController]
 [Route("/api/[controller]")]
 public class FilmsController(IManager manager) : ControllerBase
 {
@@ -12,12 +13,13 @@ public class FilmsController(IManager manager) : ControllerBase
     public IActionResult GetAll()
     {
         var books = manager.GetAllFilms();
-        if (!(books?.Any() ?? false))
+        if (!books.Any())
             return NoContent();
         return Ok(books);
     }
 
     [Route("{id:guid}", Name = "GetFilm")]
+    [HttpGet]
     public IActionResult Get(Guid id)
     {
         var film = manager.GetFilm(id);
@@ -27,11 +29,8 @@ public class FilmsController(IManager manager) : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Post([FromBody] NewFilmDto newFilm)
+    public IActionResult Post(NewFilmDto newFilm)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
-        
         Director director = null;
         if (newFilm.DirectorId.HasValue)
             director = manager.GetDirector(newFilm.DirectorId.Value);

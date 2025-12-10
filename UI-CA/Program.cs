@@ -4,7 +4,7 @@ using FilmManagement.DAL.EF;
 using FilmManagement.UI.CA;
 using Microsoft.EntityFrameworkCore;
 
-string dbPath = "filmmanagement.db";
+string dbPath = "FilmManagement.db";
 
 string connectionString = $"Data source={dbPath}";
 
