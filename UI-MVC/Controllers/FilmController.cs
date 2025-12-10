@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FilmManagement.UI.Web.Controllers;
 
-public class FilmController(IManager filmManager) : Controller
+public class FilmController(IManager manager) : Controller
 {
     public IActionResult Index()
     {
-        var allFilms = filmManager.GetAllFilms();
+        var allFilms = manager.GetAllFilms();
         return View(allFilms);
     }
 
@@ -20,12 +20,12 @@ public class FilmController(IManager filmManager) : Controller
         var viewModel = new NewFilmViewModel
         {
             Directors = new SelectList(
-                filmManager.GetAllDirectors(), 
+                manager.GetAllDirectors(), 
                 "ImdbId", 
                 "Name"
             ),
             Actors = new SelectList(
-                filmManager.GetAllActors(), 
+                manager.GetAllActors(), 
                 "ImdbId", 
                 "Name"
             )
@@ -39,26 +39,15 @@ public class FilmController(IManager filmManager) : Controller
     {
         if (!ModelState.IsValid)
         {
-            newFilm.Directors = new SelectList(
-                filmManager.GetAllDirectors(), 
-                "ImdbId", 
-                "Name"
-            );
-            newFilm.Actors = new SelectList(
-                filmManager.GetAllActors(), 
-                "ImdbId", 
-                "Name"
-            );
+            PopulateFilmSelectLists(newFilm);
             return View(newFilm);
         }
         
         Director director = null;
         if (newFilm.DirectorId.HasValue)
-        {
-            director = filmManager.GetDirector(newFilm.DirectorId.Value);
-        }
+            director = manager.GetDirector(newFilm.DirectorId.Value);
         
-        var addedFilm = filmManager.AddFilm(
+        var addedFilm = manager.AddFilm(
             newFilm.Title, 
             newFilm.Genre, 
             newFilm.ReleaseDate, 
@@ -71,7 +60,7 @@ public class FilmController(IManager filmManager) : Controller
         {
             try
             {
-                filmManager.AddActorToFilm(addedFilm.ImdbId, actorId, null);
+                manager.AddActorToFilm(addedFilm.ImdbId, actorId, null);
             }
             catch (Exception ex)
             {
@@ -84,7 +73,7 @@ public class FilmController(IManager filmManager) : Controller
 
     public IActionResult Details(Guid id)
     {
-        var film = filmManager.GetFilmWithActorsAndDirectors(id);
+        var film = manager.GetFilmWithActorsAndDirectors(id);
     
         if (film == null)
         {
@@ -123,12 +112,7 @@ public class FilmController(IManager filmManager) : Controller
     [HttpGet]
     public IActionResult Edit(Guid id)
     {
-        var film = filmManager.GetFilmWithActorsAndDirectors(id);
-        
-        if (film == null)
-        {
-            return NotFound();
-        }
+        var film = manager.GetFilmWithActorsAndDirectors(id);
         
         var editFilm = new EditFilmViewModel
         {
@@ -140,13 +124,13 @@ public class FilmController(IManager filmManager) : Controller
             DirectorId = film.Director?.ImdbId,
             SelectedActorIds = film.ActorFilms?.Select(af => af.Actor.ImdbId).ToList() ?? new(),
             Directors = new SelectList(
-                filmManager.GetAllDirectors(),
+                manager.GetAllDirectors(),
                 "ImdbId",
                 "Name",
                 film.Director?.ImdbId
             ),
             Actors = new SelectList(
-                filmManager.GetAllActors(),
+                manager.GetAllActors(),
                 "ImdbId",
                 "Name"
             )
@@ -160,21 +144,11 @@ public class FilmController(IManager filmManager) : Controller
     {
         if (!ModelState.IsValid)
         {
-            editFilm.Directors = new SelectList(
-                filmManager.GetAllDirectors(),
-                "ImdbId",
-                "Name",
-                editFilm.DirectorId
-            );
-            editFilm.Actors = new SelectList(
-                filmManager.GetAllActors(),
-                "ImdbId",
-                "Name"
-            );
+            PopulateFilmSelectLists(editFilm);
             return View(editFilm);
         }
         
-        var editExistingFilm = filmManager.GetFilm(id);
+        var editExistingFilm = manager.GetFilm(id);
         
         if (editExistingFilm == null)
         {
@@ -186,17 +160,17 @@ public class FilmController(IManager filmManager) : Controller
         editExistingFilm.ReleaseDate = editFilm.ReleaseDate;
         editExistingFilm.Rating = editFilm.Rating;
       
-        editExistingFilm.Director = editFilm.DirectorId.HasValue ? filmManager.GetDirector(editFilm.DirectorId.Value) : null;
+        editExistingFilm.Director = editFilm.DirectorId.HasValue ? manager.GetDirector(editFilm.DirectorId.Value) : null;
         
-        filmManager.ChangeFilm(editExistingFilm);
+        manager.ChangeFilm(editExistingFilm);
     
-        var existingActors = filmManager.GetActorsOfFilm(id).Select(a => a.ImdbId).ToList();
+        var existingActors = manager.GetActorsOfFilm(id).Select(a => a.ImdbId).ToList();
  
         foreach (var existingActorId in existingActors.Where(existingActorId => !editFilm.SelectedActorIds.Contains(existingActorId)))
         {
             try
             {
-                filmManager.RemoveActorFromFilm(id, existingActorId);
+                manager.RemoveActorFromFilm(id, existingActorId);
             }
             catch (Exception ex)
             {
@@ -208,7 +182,7 @@ public class FilmController(IManager filmManager) : Controller
         {
             try
             {
-                filmManager.AddActorToFilm(id, actorId, null);
+                manager.AddActorToFilm(id, actorId, null);
             }
             catch (Exception ex)
             {
@@ -222,7 +196,7 @@ public class FilmController(IManager filmManager) : Controller
     [HttpGet]
     public IActionResult Delete(Guid id)
     {
-        var film = filmManager.GetFilm(id);
+        var film = manager.GetFilm(id);
     
         if (film == null)
         {
@@ -245,16 +219,32 @@ public class FilmController(IManager filmManager) : Controller
     [HttpPost]
     public IActionResult DeletePost(Guid id)
     {
-        var film = filmManager.GetFilm(id);
+        var film = manager.GetFilm(id);
     
         if (film == null)
         {
             return NotFound();
         }
     
-        filmManager.RemoveFilm(film);
+        manager.RemoveFilm(film);
         return RedirectToAction("Index");
     }
+    
+    private void PopulateFilmSelectLists(BaseFilmFormViewModel filmFormViewModel)
+    {
+        filmFormViewModel.Directors = new SelectList(
+            manager.GetAllDirectors(),
+            "ImdbId",
+            "Name",
+            filmFormViewModel.DirectorId
+        );
+        filmFormViewModel.Actors = new SelectList(
+            manager.GetAllActors(),
+            "ImdbId",
+            "Name"
+        );
+    }
+    
     private string GetGenreDisplayString(Genre genre)
     {
         var genreList = Enum.GetValues(typeof(Genre))

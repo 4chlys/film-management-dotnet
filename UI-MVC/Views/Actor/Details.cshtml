@@ -23,40 +23,6 @@
 
             <dt class="col-sm-3">Age</dt>
             <dd class="col-sm-9">@Model.Age</dd>
-
-            <dt class="col-sm-3">Films</dt>
-            <dd class="col-sm-9">
-                @if (Model.ActorFilms != null && Model.ActorFilms.Any())
-                {
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Title</th>
-                                <th>Screen Time</th>
-                                <th>Director</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var actorFilm in Model.ActorFilms)
-                            {
-                                <tr>
-                                    <td>@actorFilm.Film.Title</td>
-                                    <td>@(actorFilm.ScreenTime?.ToString() ?? "unknown") min</td>
-                                    <td>@(actorFilm.Film.Director?.Name ?? "unknown")</td>
-                                    <td>
-                                        <a asp-controller="Film" asp-action="Details" asp-route-id="@actorFilm.Film.ImdbId">Details</a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                }
-                else
-                {
-                    <span class="text-muted">No films listed</span>
-                }
-            </dd>
         </dl>
     </div>
 </div>

@@ -8,8 +8,6 @@ public class DirectorController(IManager manager) : Controller
     public IActionResult Details(Guid id)
     {
         var director = manager.GetDirectorWithFilms(id);
-        if (director == null)
-            return NotFound();
         
         return View(director);
     }

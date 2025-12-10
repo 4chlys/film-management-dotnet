@@ -7,9 +7,7 @@ public class ActorController(IManager manager) : Controller
 {
     public IActionResult Details(Guid id)
     {
-        var actor = manager.GetActorWithFilms(id);
-        if (actor == null)
-            return NotFound();
+        var actor = manager.GetActor(id);
         
         return View(actor);
     }

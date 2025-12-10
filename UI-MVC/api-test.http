@@ -1,0 +1,15 @@
+### GET /api/films
+GET https://localhost:7228/api/Films
+Accept: application/json
+Content-Type: application/json
+
+### POST /api/films
+POST https://localhost:7228/api/Films
+Content-Type: application/json
+
+{
+  "title": "Frankenstein",
+  "genre": 2112,
+  "releaseDate": "1999-01-01",
+  "rating": 7
+}

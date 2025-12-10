@@ -9,7 +9,8 @@ builder.Services.AddDbContext<FilmDbContext>(optionsBuilder => optionsBuilder.Us
 builder.Services.AddScoped<IRepository, EfRepository>();
 builder.Services.AddScoped<IManager, Manager>();
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddXmlDataContractSerializerFormatters();
 
 var app = builder.Build();
 
