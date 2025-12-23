@@ -23,6 +23,11 @@ public class InMemoryRepository : IRepository
         return InMemoryStorage.Films.SingleOrDefault(f => f.ImdbId == imdbId);       
     }
 
+    public Film ReadFilmWithDirector(Guid imdbId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Film ReadFilmWithActorsAndDirectors(Guid imdbId)
     {
         throw new NotImplementedException();
@@ -71,6 +76,16 @@ public class InMemoryRepository : IRepository
     public void DeleteFilm(Film film)
     {
         InMemoryStorage.Films.Remove(film);
+    }
+    
+    public ActorFilm ReadActorFilm(Guid actorId, Guid filmId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void UpdateActorFilm(ActorFilm actorFilm)
+    {
+        throw new NotImplementedException();
     }
 
     public void DeleteActorFilm(ActorFilm ActorId)

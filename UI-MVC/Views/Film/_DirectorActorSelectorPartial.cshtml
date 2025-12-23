@@ -2,7 +2,7 @@
 
 <div class="form-group">
     <label asp-for="DirectorId">Director</label>
-    <select asp-for="DirectorId" asp-items="Model.Directors" class="form-control">
+    <select asp-for="DirectorId" asp-items="ViewBag.Directors" class="form-control">
         <option value="">-- Select Director (Optional) --</option>
     </select>
     <span asp-validation-for="DirectorId" class="text-danger"></span>
@@ -10,7 +10,7 @@
 
 <div class="form-group">
     <label asp-for="SelectedActorIds">Actors</label>
-    <select asp-for="SelectedActorIds" asp-items="Model.Actors" class="form-control" multiple>
+    <select asp-for="SelectedActorIds" asp-items="ViewBag.Actors" class="form-control" multiple>
     </select>
     <small class="form-text text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple actors</small>
     <span asp-validation-for="SelectedActorIds" class="text-danger"></span>

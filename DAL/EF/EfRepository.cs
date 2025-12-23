@@ -18,6 +18,13 @@ public class EfRepository(FilmDbContext context) : IRepository
         return context.Films.Find(imdbId);
     }
 
+    public Film ReadFilmWithDirector(Guid imdbId)
+    {
+        return context.Films
+            .Include(f => f.Director)
+            .SingleOrDefault(f => f.ImdbId == imdbId);
+    }
+
     public Film ReadFilmWithActorsAndDirectors(Guid imdbId)
     {
         return context.Films
@@ -86,6 +93,22 @@ public class EfRepository(FilmDbContext context) : IRepository
             context.Films.Attach(actorFilm.Film);
 
         context.ActorFilms.Add(actorFilm);
+        context.SaveChanges();
+    }
+    
+    public ActorFilm ReadActorFilm(Guid actorId, Guid filmId)
+    {
+        return context.ActorFilms
+            .Include(af => af.Actor)
+            .Include(af => af.Film)
+            .FirstOrDefault(af => 
+                Property<Guid>(af, "ActorFK_Shadow") == actorId && 
+                Property<Guid>(af, "FilmFK_Shadow") == filmId);
+    }
+
+    public void UpdateActorFilm(ActorFilm actorFilm)
+    {
+        context.ActorFilms.Update(actorFilm);
         context.SaveChanges();
     }
 

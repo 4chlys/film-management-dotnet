@@ -1,12 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace FilmManagement.UI.Web.Models.Film;
 
-public class DeleteFilmViewModel : BaseFilmViewModel
+public class DeleteFilmViewModel : BaseFilmDisplayViewModel
 {
-    [Display(Name = "Director")]
-    public string DirectorName { get; set; } = string.Empty;
-    
-    [Display(Name = "Release Year")]
+    public string DirectorName { get; set; }
     public int ReleaseYear => ReleaseDate.Year;
 }

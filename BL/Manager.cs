@@ -28,6 +28,11 @@ public class Manager(IRepository repository) : IManager
         return repository.ReadFilm(imdbId);       
     }
 
+    public Film GetFilmWithDirector(Guid imdbId)
+    {
+        return repository.ReadFilmWithDirector(imdbId);
+    }
+
     public Film GetFilmWithActorsAndDirectors(Guid imdbId)
     {
         return repository.ReadFilmWithActorsAndDirectors(imdbId);      
@@ -113,6 +118,17 @@ public class Manager(IRepository repository) : IManager
         };
 
         repository.DeleteActorFilm(actorFilm);
+    }
+
+    public void UpdateActorFilmScreenTime(Guid filmId, Guid actorId, int? screenTime)
+    {
+        var actorFilm = repository.ReadActorFilm(actorId, filmId);
+        if (actorFilm == null)
+            throw new InvalidOperationException("Actor-Film relationship not found.");
+    
+        actorFilm.ScreenTime = screenTime;
+        EntityValidator.ValidateEntity(actorFilm);
+        repository.UpdateActorFilm(actorFilm);
     }
 
 

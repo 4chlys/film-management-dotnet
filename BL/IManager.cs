@@ -9,6 +9,7 @@ public interface IManager
     Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director);
     void AddActorToFilm(Guid filmId, Guid actorId, int? screenTime);
     Film GetFilm(Guid imdbId); 
+    Film GetFilmWithDirector(Guid imdbId);
     Film GetFilmWithActorsAndDirectors(Guid imdbId);
     IEnumerable<Film> GetAllFilms();
     IEnumerable<Film> GetAllFilmsWithDirectors();
@@ -17,6 +18,7 @@ public interface IManager
     void ChangeFilm(Film film);
     void RemoveFilm(Film film);
     void RemoveActorFromFilm(Guid filmId, Guid actorId);
+    void UpdateActorFilmScreenTime(Guid filmId, Guid actorId, int? screenTime);
     
     Actor AddActor(string name, string nationality, DateTime dateOfBirth, DateTime? dateOfDeath);
     Actor GetActor(Guid imdbId); 

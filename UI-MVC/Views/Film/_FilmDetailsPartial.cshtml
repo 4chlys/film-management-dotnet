@@ -28,7 +28,6 @@
                     <span class="text-muted">Unknown</span>
                 }
             </dd>
-            
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Actors)</dt>
             <dd class="col-sm-9">
                 @if (Model.Actors != null && Model.Actors.Any())
@@ -48,7 +47,21 @@
                                 <tr>
                                     <td>@actor.Name</td>
                                     <td>@actor.DateOfBirth.ToString("dd/MM/yyyy")</td>
-                                    <td>@(actor.ScreenTime?.ToString() ?? "unknown") min</td>
+                                    <td>
+                                        <form asp-controller="Film" asp-action="UpdateScreenTime" method="post" class="d-inline">
+                                            <input type="hidden" name="filmId" value="@Model.ImdbId" />
+                                            <input type="hidden" name="actorId" value="@actor.ImdbId" />
+                                            <div class="input-group input-group-sm" style="width: 150px;">
+                                                <input type="number" 
+                                                       name="screenTime" 
+                                                       value="@actor.ScreenTime" 
+                                                       class="form-control" 
+                                                       placeholder="minutes"
+                                                       min="0" />
+                                                <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                            </div>
+                                        </form>
+                                    </td>
                                     <td>
                                         <a asp-controller="Actor" asp-action="Details" asp-route-id="@actor.ImdbId">Details</a>
                                     </td>

@@ -2,13 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FilmManagement.UI.Web.Models.Film;
 
-public class DetailsFilmViewModel : BaseFilmViewModel
+public class DetailsFilmViewModel : BaseFilmDisplayViewModel
 {
-    [Display(Name = "Director")]
     public DirectorInfo Director { get; set; }
-    
-    [Display(Name = "Actors")]
-    public List<ActorInfo> Actors { get; set; } = new();
+    public List<ActorInfo> Actors { get; set; } = [];
     
     public class DirectorInfo
     {

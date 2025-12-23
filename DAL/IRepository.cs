@@ -7,6 +7,7 @@ public interface IRepository
 {
     void CreateFilm(Film film);
     Film ReadFilm(Guid imdbId);
+    Film ReadFilmWithDirector(Guid imdbId);
     Film ReadFilmWithActorsAndDirectors(Guid imdbId);
     IEnumerable<Film> ReadAllFilms();
     IEnumerable<Film> ReadAllFilmsWithDirectors();
@@ -17,6 +18,8 @@ public interface IRepository
     void DeleteFilm(Film film);
     
     void CreateActorFilm(ActorFilm actorFilm);
+    ActorFilm ReadActorFilm(Guid actorId, Guid filmId);
+    void UpdateActorFilm(ActorFilm actorFilm);
     void DeleteActorFilm(ActorFilm actorFilm);
     bool ActorFilmExists(Guid actorId, Guid filmId);
     
