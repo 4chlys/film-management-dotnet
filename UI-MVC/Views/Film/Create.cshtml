@@ -6,7 +6,7 @@
 
 <h2>Create New Film</h2>
 
-<form asp-action="Create" method="post">
+<form asp-controller="Film" asp-action="Create" method="post">
     <partial name="_FilmFillPartial" model="Model" />
     
     <partial name="_DirectorActorSelectorPartial" model="Model" />

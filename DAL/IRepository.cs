@@ -9,6 +9,7 @@ public interface IRepository
     Film ReadFilm(Guid imdbId);
     Film ReadFilmWithActorsAndDirectors(Guid imdbId);
     IEnumerable<Film> ReadAllFilms();
+    IEnumerable<Film> ReadAllFilmsWithDirectors();
     IEnumerable<Film> ReadAllFilmsWithActorsAndDirectors();
     IEnumerable<Film> ReadFilmsByCriteria(Expression<Func<Film, bool>> predicate);
     IEnumerable<Actor> ReadActorsOfFilm(Guid imdbId);

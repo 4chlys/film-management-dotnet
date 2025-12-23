@@ -49,7 +49,7 @@ public static class EnumExtensions
     public static T ParseEnumFlags<T>(this string value, bool ignoreCase = true) where T : struct, Enum
     {
         if (string.IsNullOrWhiteSpace(value))
-            return default(T);
+            return default;
     
         int result = 0;
         var parts = value.Split(',', StringSplitOptions.RemoveEmptyEntries);

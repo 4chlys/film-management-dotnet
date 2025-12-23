@@ -16,7 +16,8 @@ public class FilmDbContext(DbContextOptions options) : DbContext(options)
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseSqlite("Data source=filmmanagement.db");
+            var contextName = GetType().Name;
+            optionsBuilder.UseSqlite($"Data Source=_ERROR_{contextName}_Not_Configured_.db");
         }
 
         optionsBuilder.LogTo(message => Debug.WriteLine(message), LogLevel.Information);
@@ -24,6 +25,12 @@ public class FilmDbContext(DbContextOptions options) : DbContext(options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Actor>()
+            .Ignore(a => a.Age);
+
+        modelBuilder.Entity<Director>()
+            .HasIndex(d => d.Name);
+        
         modelBuilder.Entity<Film>()
             .Property<Guid?>("DirectorFK_Shadow");
         modelBuilder.Entity<ActorFilm>()

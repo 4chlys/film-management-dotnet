@@ -67,48 +67,10 @@ classDiagram
         Documentary
     }
 
-    class DataService {
-        +List~Actor~ Actors
-        +List~Film~ Films
-        +List~FilmDirectors~ Directors
-        +Seed() void
-    }
-
-    class MenuService {
-        -DataService _dataService
-        +MenuService(DataService dataService)
-        +ShowMainMenu() void
-        +HandleMenuChoice(int choice) void
-        -ShowAllFilms() void
-        -ShowFilmsByGenre() void
-        -ShowFilmsByDirector() void
-        -ShowFilmsByGenreAndDirector() void
-        -ShowFilmsByYearRange() void
-        -ShowFilmsByRatingRange() void
-        -ShowFilmsWithAdvancedFilters() void
-        -ShowAllActors() void
-        -ShowActorsWithCriteria() void
-        -ShowActorsByNationality() void
-        -ShowActorsByFilmCount() void
-        -ShowAllDirectors() void
-        -ShowDirectorsWithCriteria() void
-    }
-
-    class Program {
-        +Main(string[] args)$ void
-    }
-
     Actor "0..*" -- "0..*" Film : appears in
     Film "0..*" --> "1" FilmDirector : directed by
     FilmDirector "1" -- "0..*" Film : directs
     Film --> Genre : has
-
-    DataService "1" --> "*" Actor : manages
-    DataService "1" --> "*" Film : manages
-    DataService "1" --> "*" FilmDirector : manages
-    MenuService "1" --> "1" DataService : uses
-    Program ..> DataService : creates
-    Program ..> MenuService : creates
 ```
 
 ## Sprint 3
@@ -118,7 +80,7 @@ classDiagram
 ```sql
 SELECT "a"."ImdbId", "a"."DateOfBirth", "a"."DateOfDeath", "a"."Name", "a"."Nationality"
 FROM "Actors" AS "a"
-WHERE instr(upper("a"."Name"), @__ToUpper_0) > 0
+WHERE instr(upper("a"."Name"), @__upperFilter_0) > 0 AND "a"."DateOfBirth" <= @__maxDateOfBirth_1
 -- Name = "Emma" AND MinimumAge = 20
 ```
 
@@ -127,7 +89,7 @@ WHERE instr(upper("a"."Name"), @__ToUpper_0) > 0
 ```sql
 SELECT "a"."ImdbId", "a"."DateOfBirth", "a"."DateOfDeath", "a"."Name", "a"."Nationality"
 FROM "Actors" AS "a"
-WHERE instr(upper("a"."Name"), @__ToUpper_0) > 0
+WHERE instr(upper("a"."Name"), @__upperFilter_0) > 0
 -- Name = "Emma"
 ```
 

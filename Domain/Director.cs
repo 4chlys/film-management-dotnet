@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using FilmManagement.BL.Domain.Validation;
 
 namespace FilmManagement.BL.Domain;
@@ -7,7 +6,6 @@ namespace FilmManagement.BL.Domain;
 public class Director : IValidatableObject
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public Guid ImdbId { get; set; }
     
     [Required]

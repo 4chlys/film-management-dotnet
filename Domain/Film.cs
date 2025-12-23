@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using FilmManagement.BL.Domain.Validation;
 
 namespace FilmManagement.BL.Domain;

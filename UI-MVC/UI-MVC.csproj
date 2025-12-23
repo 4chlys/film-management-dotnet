@@ -7,6 +7,7 @@
 
     <ItemGroup>
       <PackageReference Include="KdGTI.Analyzers.Students" Version="0.1.0" />
+      <PackageReference Include="KdGTI.AspNetCore.LiveMonitoring" Version="1.2.2" />
     </ItemGroup>
 
     <PropertyGroup>

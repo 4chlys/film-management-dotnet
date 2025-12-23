@@ -1,6 +1,118 @@
 ﻿@{
     ViewData["Title"] = "Privacy Policy";
+    var appName = "FilmManagement";
+    var authorName = "Romeo Weyns";
+    var lastUpdated = "December 23, 2025";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<section>
+    <header>
+        <h1>@ViewData["Title"]</h1>
+        <p><strong>Application:</strong> @appName</p>
+        <p><strong>Created by:</strong> @authorName</p>
+        <p><strong>Last updated:</strong> @lastUpdated</p>
+    </header>
+
+    <section>
+        <h2>Overview</h2>
+        <p>
+            This Privacy Policy explains how @appName handles information when you use this website.
+            @appName is a learning project created by @authorName and is not intended for commercial use.
+        </p>
+    </section>
+
+    <section>
+        <h2>Information we collect</h2>
+        <p>
+            @appName may collect the following types of information depending on how the application is configured and used:
+        </p>
+        <ul>
+            <li>
+                <strong>Film-related data you submit:</strong> for example film titles, genres, release dates, ratings,
+                directors, and actors you add or edit through the application.
+            </li>
+            <li>
+                <strong>Technical data:</strong> basic server logs may include your IP address, browser type,
+                visited pages, and timestamps. This is typically collected automatically by the hosting environment.
+            </li>
+        </ul>
+        <p>
+            @appName does not intentionally collect sensitive personal data.
+        </p>
+    </section>
+
+    <section>
+        <h2>How we use information</h2>
+        <ul>
+            <li>To provide the core functionality of the application (creating, editing, and displaying films).</li>
+            <li>To maintain and improve the application (debugging, performance monitoring, and error investigation).</li>
+            <li>To protect the application from misuse (basic security logging and domain protection).</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Cookies</h2>
+        <p>
+            @appName may use cookies that are necessary for the website to function correctly.
+            For example, ASP.NET Core may use cookies for features such as session state or antiforgery protection.
+        </p>
+        <p>
+            @appName does not use cookies for advertising purposes.
+        </p>
+    </section>
+
+    <section>
+        <h2>Third-party services and content</h2>
+        <p>
+            @appName may reference external sources (for example IMDb identifiers) but does not automatically send your data
+            to third-party services unless explicitly configured to do so.
+        </p>
+        <p>
+            If the site is hosted on a third-party platform or uses third-party analytics, those providers may collect technical
+            information according to their own privacy policies.
+        </p>
+    </section>
+
+    <section>
+        <h2>Data storage and retention</h2>
+        <p>
+            Data entered into @appName is stored in the application database.
+            Data is kept only as long as needed for the application to function and for development/testing purposes.
+        </p>
+    </section>
+
+    <section>
+        <h2>Your choices</h2>
+        <ul>
+            <li>You can avoid submitting personal information by not entering it into free-text fields.</li>
+            <li>If this application supports account features, you may be able to request deletion of your data.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Security</h2>
+        <p>
+            Reasonable measures are taken to protect the application and its data, but no method of transmission or storage is
+            100% secure. Do not submit sensitive information.
+        </p>
+    </section>
+
+    <section>
+        <h2>Changes to this policy</h2>
+        <p>
+            This Privacy Policy may be updated to reflect changes to the application. The “Last updated” date at the top of
+            this page indicates the most recent revision.
+        </p>
+    </section>
+
+    <section>
+        <h2>Contact</h2>
+        <p>
+            For questions about this Privacy Policy or the application, contact
+            <strong>Romeo Weyns</strong> at
+            <a href="mailto:romeo.weyns@student.kdg.be">
+                romeo.weyns@student.kdg.be
+            </a>.
+        </p>
+    </section>
+</section>

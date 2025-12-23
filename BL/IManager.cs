@@ -11,6 +11,7 @@ public interface IManager
     Film GetFilm(Guid imdbId); 
     Film GetFilmWithActorsAndDirectors(Guid imdbId);
     IEnumerable<Film> GetAllFilms();
+    IEnumerable<Film> GetAllFilmsWithDirectors();
     IEnumerable<Film> GetAllFilmsWithActorsAndDirectors();
     IEnumerable<Film> GetFilmsByGenre(Genre genre); 
     void ChangeFilm(Film film);

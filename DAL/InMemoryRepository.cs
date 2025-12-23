@@ -33,6 +33,11 @@ public class InMemoryRepository : IRepository
         return InMemoryStorage.Films;
     }
 
+    public IEnumerable<Film> ReadAllFilmsWithDirectors()
+    {
+        throw new NotImplementedException();
+    }
+
     public IEnumerable<Film> ReadAllFilmsWithActorsAndDirectors()
     {
         throw new NotImplementedException();

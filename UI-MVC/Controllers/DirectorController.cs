@@ -7,7 +7,7 @@ public class DirectorController(IManager manager) : Controller
 {
     public IActionResult Details(Guid id)
     {
-        var director = manager.GetDirectorWithFilms(id);
+        var director = manager.GetDirector(id);
         
         return View(director);
     }

@@ -38,6 +38,11 @@ public class Manager(IRepository repository) : IManager
         return repository.ReadAllFilms();
     }
 
+    public IEnumerable<Film> GetAllFilmsWithDirectors()
+    {
+        return repository.ReadAllFilmsWithDirectors();
+    }
+
     public IEnumerable<Film> GetAllFilmsWithActorsAndDirectors()
     {
         return repository.ReadAllFilmsWithActorsAndDirectors();

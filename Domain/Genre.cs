@@ -3,7 +3,7 @@
 namespace FilmManagement.BL.Domain;
 
 [Flags]
-public enum Genre : int
+public enum Genre
 {
     None = 0,
     Action = 1 << 0,

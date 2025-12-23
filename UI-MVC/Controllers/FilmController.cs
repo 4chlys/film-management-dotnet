@@ -10,7 +10,7 @@ public class FilmController(IManager manager) : Controller
 {
     public IActionResult Index()
     {
-        var allFilms = manager.GetAllFilms();
+        var allFilms = manager.GetAllFilmsWithDirectors();
         return View(allFilms);
     }
 
@@ -42,43 +42,40 @@ public class FilmController(IManager manager) : Controller
             PopulateFilmSelectLists(newFilm);
             return View(newFilm);
         }
-        
+
         Director director = null;
         if (newFilm.DirectorId.HasValue)
             director = manager.GetDirector(newFilm.DirectorId.Value);
-        
+
         var addedFilm = manager.AddFilm(
-            newFilm.Title, 
-            newFilm.Genre, 
-            newFilm.ReleaseDate, 
-            newFilm.Rating, 
+            newFilm.Title,
+            newFilm.Genre,
+            newFilm.ReleaseDate,
+            newFilm.Rating,
             director
         );
 
-        if (newFilm.SelectedActorIds == null || newFilm.SelectedActorIds.Count == 0) return RedirectToAction("Details", new { Id = newFilm.ImdbId });
-        foreach (var actorId in newFilm.SelectedActorIds)
+        if (newFilm.SelectedActorIds != null)
         {
-            try
+            foreach (var actorId in newFilm.SelectedActorIds)
             {
-                manager.AddActorToFilm(addedFilm.ImdbId, actorId, null);
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", $"Failed to add actor: {ex.Message}");
+                try
+                {
+                    manager.AddActorToFilm(addedFilm.ImdbId, actorId, null);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Failed to add actor: {ex.Message}");
+                }
             }
         }
 
-        return RedirectToAction("Details", new { Id = newFilm.ImdbId });
+        return RedirectToAction("Details", new { id = addedFilm.ImdbId });
     }
 
     public IActionResult Details(Guid id)
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
-    
-        if (film == null)
-        {
-            return NotFound();
-        }
 
         var detailFilm = new DetailsFilmViewModel
         {
@@ -149,11 +146,6 @@ public class FilmController(IManager manager) : Controller
         }
         
         var editExistingFilm = manager.GetFilm(id);
-        
-        if (editExistingFilm == null)
-        {
-            return NotFound();
-        }
   
         editExistingFilm.Title = editFilm.Title;
         editExistingFilm.Genre = editFilm.Genre;
@@ -197,11 +189,6 @@ public class FilmController(IManager manager) : Controller
     public IActionResult Delete(Guid id)
     {
         var film = manager.GetFilm(id);
-    
-        if (film == null)
-        {
-            return NotFound();
-        }
 
         var deleteFilm = new DeleteFilmViewModel
         {
@@ -220,11 +207,6 @@ public class FilmController(IManager manager) : Controller
     public IActionResult DeletePost(Guid id)
     {
         var film = manager.GetFilm(id);
-    
-        if (film == null)
-        {
-            return NotFound();
-        }
     
         manager.RemoveFilm(film);
         return RedirectToAction("Index");

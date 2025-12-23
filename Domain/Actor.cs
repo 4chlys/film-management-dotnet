@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using FilmManagement.BL.Domain.Validation;
 
 namespace FilmManagement.BL.Domain;
@@ -22,7 +21,6 @@ public class Actor : IValidatableObject
     [DateRange(minYear: 1800, mustBePast: true)]
     public DateTime? DateOfDeath { get; set; }
     
-    [NotMapped]
     public int Age => CalculateAge(DateOfBirth, DateOfDeath);
 
     public ICollection<ActorFilm> ActorFilms { get; init; } = [];

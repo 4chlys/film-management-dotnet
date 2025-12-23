@@ -32,6 +32,13 @@ public class EfRepository(FilmDbContext context) : IRepository
         return context.Films.ToList();
     }
 
+    public IEnumerable<Film> ReadAllFilmsWithDirectors()
+    {
+        return context.Films
+            .Include(f => f.Director)
+            .ToList();
+    }
+
     public IEnumerable<Film> ReadAllFilmsWithActorsAndDirectors()
     {
         return context.Films
