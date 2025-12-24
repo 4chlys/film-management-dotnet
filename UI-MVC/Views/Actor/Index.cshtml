@@ -1,0 +1,28 @@
+@{
+    ViewBag.Title = "All Actors";
+}
+
+<h2>All Actors</h2>
+
+<p>
+    <button id="refreshButton" class="btn btn-primary">Refresh Actors List</button>
+</p>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th>Nationality</th>
+        <th>Date of Birth</th>
+        <th>Date of Death</th>
+        <th>Age</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody id="actorsTableBody">
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="~/js/actors-index.js" defer></script>
+}
