@@ -1,8 +1,9 @@
 using FilmManagement.BL;
 using FilmManagement.BL.Domain;
-using FilmManagement.UI.Web.Models.Dto;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using FilmManagement.UI.Web.Models.Dto.Actor;
+using FilmManagement.UI.Web.Models.Dto.Film;
 
 namespace FilmManagement.UI.Web.Controllers.Api;
 
@@ -10,12 +11,40 @@ namespace FilmManagement.UI.Web.Controllers.Api;
 [Route("api/[controller]")]
 public class FilmsController(IManager manager) : ControllerBase
 {
+    [HttpGet]
+    public ActionResult<IEnumerable<FilmDto>> GetAll([FromQuery] Genre? genre = null)
+    {
+        IEnumerable<Film> films;
+        
+        if (genre.HasValue)
+        {
+            films = manager.GetFilmsByGenre(genre.Value);
+        }
+        else
+        {
+            films = manager.GetAllFilmsWithDirectors();
+        }
+
+        if (!films.Any())
+            return NoContent();
+
+        return Ok(films.Select(f => new FilmDto
+        {
+            ImdbId = f.ImdbId,
+            Title = f.Title,
+            Genre = f.Genre.ToString(),
+            ReleaseDate = f.ReleaseDate,
+            Rating = f.Rating,
+            DirectorName = f.Director?.Name
+        }));
+    }
+
     [HttpGet("{filmId:guid}")]
     public ActionResult<FilmDto> Get(Guid filmId)
     {
-        var film = manager.GetFilm(filmId);
+        var film = manager.GetFilmWithDirector(filmId);
         if (film == null)
-            return NotFound();
+            return NotFound(new { error = "Film not found" });
 
         return Ok(new FilmDto
         {
@@ -24,77 +53,120 @@ public class FilmsController(IManager manager) : ControllerBase
             Genre = film.Genre.ToString(),
             ReleaseDate = film.ReleaseDate,
             Rating = film.Rating,
-            DirectorName = film.Director.Name
+            DirectorName = film.Director?.Name
         });
     }
 
     [HttpPost]
     public ActionResult<FilmDto> Create(NewFilmDto dto)
     {
-        Director director = null;
-
-        if (dto.DirectorId.HasValue)
+        try
         {
-            director = manager.GetDirector(dto.DirectorId.Value);
-        }
-
-        var film = manager.AddFilm(
-            dto.Title,
-            dto.Genre,
-            dto.ReleaseDate,
-            dto.Rating,
-            director
-        );
-
-        return CreatedAtAction(
-            nameof(Get),
-            new { filmId = film.ImdbId },
-            new FilmDto
+            Director director = null;
+            if (dto.DirectorId.HasValue)
             {
-                ImdbId = film.ImdbId,
-                Title = film.Title,
-                Genre = film.Genre.ToString(),
-                ReleaseDate = film.ReleaseDate,
-                Rating = film.Rating,
-                DirectorName = film.Director?.Name
+                director = manager.GetDirector(dto.DirectorId.Value);
+                if (director == null)
+                    return NotFound(new { error = $"Director with ID {dto.DirectorId.Value} not found" });
             }
-        );
-    }
 
+            var film = manager.AddFilm(
+                dto.Title,
+                dto.Genre,
+                dto.ReleaseDate,
+                dto.Rating,
+                director
+            );
+
+            return CreatedAtAction(
+                nameof(Get),
+                new { filmId = film.ImdbId },
+                new FilmDto
+                {
+                    ImdbId = film.ImdbId,
+                    Title = film.Title,
+                    Genre = film.Genre.ToString(),
+                    ReleaseDate = film.ReleaseDate,
+                    Rating = film.Rating,
+                    DirectorName = film.Director?.Name
+                }
+            );
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 
     [HttpPut("{filmId:guid}")]
     public IActionResult Update(Guid filmId, UpdateFilmDto dto)
     {
-        Director director = null;
-
-        if (dto.DirectorId.HasValue)
+        try
         {
-            director = manager.GetDirector(dto.DirectorId.Value);
+            var film = manager.GetFilm(filmId);
+            if (film == null)
+                return NotFound(new { error = "Film not found" });
+
+            Director director = null;
+            if (dto.DirectorId.HasValue)
+            {
+                director = manager.GetDirector(dto.DirectorId.Value);
+                if (director == null)
+                    return NotFound(new { error = $"Director with ID {dto.DirectorId.Value} not found" });
+            }
+
+            film.Title = dto.Title;
+            film.Genre = dto.Genre;
+            film.ReleaseDate = dto.ReleaseDate;
+            film.Rating = dto.Rating;
+            film.Director = director;
+
+            manager.ChangeFilm(film);
+            return NoContent();
         }
-
-        var filmToChange = new Film
+        catch (ValidationException ex)
         {
-            ImdbId = filmId,
-            Title = dto.Title,
-            Genre = dto.Genre,
-            ReleaseDate = dto.ReleaseDate,
-            Rating = dto.Rating,
-            Director = director
-        };
-        manager.ChangeFilm(filmToChange);
-
-        return NoContent();
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpDelete("{filmId:guid}")]
     public IActionResult Delete(Guid filmId)
     {
-        var filmToDelete = manager.GetFilm(filmId);
-        if (filmToDelete == null)
-            return NotFound();
+        var film = manager.GetFilm(filmId);
+        if (film == null)
+            return NotFound(new { error = "Film not found" });
 
-        manager.RemoveFilm(filmToDelete);
+        try
+        {
+            manager.RemoveFilm(film);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+    }
 
-        return NoContent();
+    [HttpGet("{filmId:guid}/actors")]
+    public ActionResult<IEnumerable<ActorDto>> GetActorsByFilm(Guid filmId)
+    {
+        var film = manager.GetFilm(filmId);
+        if (film == null)
+            return NotFound(new { error = "Film not found" });
+
+        var actors = manager.GetActorsOfFilm(filmId);
+        if (!actors.Any())
+            return NoContent();
+
+        return Ok(actors.Select(a => new ActorDto
+        {
+            ImdbId = a.ImdbId,
+            Name = a.Name,
+            Nationality = a.Nationality,
+            DateOfBirth = a.DateOfBirth,
+            DateOfDeath = a.DateOfDeath,
+            Age = a.Age
+        }));
     }
 }

@@ -1,20 +1,22 @@
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL.Domain.Validation;
 
-namespace FilmManagement.UI.Web.Models.Dto;
+namespace FilmManagement.UI.Web.Models.Dto.Actor;
 
-public class NewDirectorDto
+// For POST requests
+public class NewActorDto
 {
     [Required]
     [StringLength(100, MinimumLength = 3)]
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; set; }
     
     [StringLength(50, MinimumLength = 2)]
-    public string Country { get; set; } = string.Empty;
+    public string Nationality { get; set; }
+    
+    [Required]
+    [DateRange(minYear: 1800, mustBePast: true)]
+    public DateTime DateOfBirth { get; set; }
     
     [DateRange(minYear: 1800, mustBePast: true)]
-    public int? CareerStart { get; set; } 
-    
-    [DateRange(minYear: 1800, mustBePast: true)]
-    public int? CareerEnd { get; set; }
+    public DateTime? DateOfDeath { get; set; }
 }

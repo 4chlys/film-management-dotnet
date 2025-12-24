@@ -1,4 +1,4 @@
-namespace FilmManagement.UI.Web.Models.Dto;
+namespace FilmManagement.UI.Web.Models.Dto.Director;
 
 public class DirectorDto
 {

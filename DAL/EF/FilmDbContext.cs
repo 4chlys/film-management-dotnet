@@ -37,11 +37,11 @@ public class FilmDbContext(DbContextOptions options) : DbContext(options)
         
         modelBuilder.Entity<Film>()
             .Property<Guid?>("DirectorFK_Shadow");
-        modelBuilder.Entity<ActorFilm>()
-            .Property<Guid?>("ActorFK_Shadow");
-        modelBuilder.Entity<ActorFilm>()
-            .Property<Guid?>("FilmFK_Shadow");
         
+        modelBuilder.Entity<ActorFilm>()
+            .Property<Guid>("ActorFK_Shadow");
+        modelBuilder.Entity<ActorFilm>()
+            .Property<Guid>("FilmFK_Shadow");
         modelBuilder.Entity<ActorFilm>()
             .HasKey("ActorFK_Shadow", "FilmFK_Shadow");
 

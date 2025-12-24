@@ -2,9 +2,9 @@ using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL.Domain;
 using FilmManagement.BL.Domain.Validation;
 
-namespace FilmManagement.UI.Web.Models.Dto;
+namespace FilmManagement.UI.Web.Models.Dto.Film;
 
-public class NewFilmDto
+public class UpdateFilmDto
 {
     [Required]
     [StringLength(100, MinimumLength = 3)]

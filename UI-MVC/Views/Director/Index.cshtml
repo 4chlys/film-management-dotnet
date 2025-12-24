@@ -1,13 +1,11 @@
-@model IEnumerable<Director>
-
 @{
-    ViewBag.Title = "title";
+    ViewBag.Title = "All Directors";
 }
 
 <h2>All Directors</h2>
 
 <p>
-    <a asp-action="Refresh" class="btn btn-primary">Refresh Directors List</a>
+    <button id="refreshButton" class="btn btn-primary">Refresh Directors List</button>
 </p>
 
 <table class="table table-striped">
@@ -20,18 +18,10 @@
         <th></th>
     </tr>
     </thead>
-    <tbody>
-    @foreach (var director in Model)
-    {
-        <tr>
-            <td>@director.Name</td>
-            <td>@director.Country</td>
-            <td>@director.CareerStart</td>
-            <td>@director.CareerEnd</td>
-            <td>
-                <a asp-action="Details" asp-route-id="@director.ImdbId">Details</a>
-            </td>
-        </tr>
-    }
+    <tbody id="directorsTableBody">
     </tbody>
 </table>
+
+@section Scripts {
+    <script src="~/js/directors-index.js"></script>
+}

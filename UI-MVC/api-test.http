@@ -1,4 +1,4 @@
-### Get directors (JSON required for scripting)
+### Get all directors (JSON)
 GET http://localhost:5199/api/directors
 Accept: application/json
 
@@ -14,21 +14,47 @@ Accept: application/json
 GET http://localhost:5199/api/directors/{{directorId}}
 Accept: application/json
 
-
 ### Get films by director
 GET http://localhost:5199/api/directors/{{directorId}}/films
 Accept: application/json
 
+### Create a new director
+POST http://localhost:5199/api/directors
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Denis Villeneuve",
+  "country": "Canada",
+  "careerStart": 1998,
+  "careerEnd": null
+}
+
+> {%
+    client.global.set("newDirectorId", response.body.imdbId);
+%}
+
+#############
+### FILMS ###
+#############
 
 ### Get all films
 GET http://localhost:5199/api/films
 Accept: application/json
 
+> {%
+    if (response.body?.$values?.length > 0) {
+        client.global.set("filmId", response.body.$values[0].imdbId);
+    }
+%}
 
-### Get films by genre (Drama = 4)
+### Get films by genre (Drama = 4, Action = 1, Drama|Action = 5)
 GET http://localhost:5199/api/films?genre=4
 Accept: application/json
 
+### Get specific film
+GET http://localhost:5199/api/films/{{filmId}}
+Accept: application/json
 
 ### Create film
 POST http://localhost:5199/api/films
@@ -44,12 +70,24 @@ Content-Type: application/json
 }
 
 > {%
-    client.global.set("filmId", response.body.imdbId);
+    client.global.set("newFilmId", response.body.imdbId);
 %}
 
+### Create film without director (should work)
+POST http://localhost:5199/api/films
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "Test Film Without Director",
+  "genre": 4,
+  "releaseDate": "2024-01-01",
+  "rating": 7.0,
+  "directorId": null
+}
 
 ### Update film
-PUT http://localhost:5199/api/films/{{filmId}}
+PUT http://localhost:5199/api/films/{{newFilmId}}
 Accept: application/json
 Content-Type: application/json
 
@@ -61,8 +99,19 @@ Content-Type: application/json
   "directorId": "{{directorId}}"
 }
 
+### Delete film
+DELETE http://localhost:5199/api/films/{{newFilmId}}
+Accept: application/json
 
-### Get actors
+### Get actors of a film
+GET http://localhost:5199/api/films/{{filmId}}/actors
+Accept: application/json
+
+###############
+### ACTORS ###
+###############
+
+### Get all actors
 GET http://localhost:5199/api/actors
 Accept: application/json
 
@@ -72,6 +121,9 @@ Accept: application/json
     }
 %}
 
+### Get specific actor
+GET http://localhost:5199/api/actors/{{actorId}}
+Accept: application/json
 
 ### Create actor
 POST http://localhost:5199/api/actors
@@ -86,11 +138,34 @@ Content-Type: application/json
 }
 
 > {%
-    client.global.set("actorId", response.body.imdbId);
+    client.global.set("newActorId", response.body.imdbId);
 %}
 
+### Update actor
+PUT http://localhost:5199/api/actors/{{newActorId}}
+Accept: application/json
+Content-Type: application/json
 
-### Create actor-film link
+{
+  "name": "Emma Stone (Updated)",
+  "nationality": "American",
+  "dateOfBirth": "1988-11-06",
+  "dateOfDeath": null
+}
+
+### Delete actor
+DELETE http://localhost:5199/api/actors/{{newActorId}}
+Accept: application/json
+
+### Get films by actor
+GET http://localhost:5199/api/actors/{{actorId}}/films
+Accept: application/json
+
+#####################
+### ACTOR-FILMS ###
+#####################
+
+### Create actor-film relationship
 POST http://localhost:5199/api/actorfilms
 Accept: application/json
 Content-Type: application/json
@@ -101,12 +176,50 @@ Content-Type: application/json
   "screenTime": 105
 }
 
-
-### Get actors by film
-GET http://localhost:5199/api/films/{{filmId}}/actors
+### Get specific actor-film relationship
+GET http://localhost:5199/api/actorfilms/{{filmId}}/{{actorId}}
 Accept: application/json
 
-
-### Delete film
-DELETE http://localhost:5199/api/films/{{filmId}}
+### Update screen time
+PUT http://localhost:5199/api/actorfilms/{{filmId}}/{{actorId}}
 Accept: application/json
+Content-Type: application/json
+
+120
+
+### Delete actor-film relationship
+DELETE http://localhost:5199/api/actorfilms/{{filmId}}/{{actorId}}
+Accept: application/json
+
+#####################
+### ERROR CASES ###
+#####################
+
+### Get non-existent film
+GET http://localhost:5199/api/films/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create film with invalid data
+POST http://localhost:5199/api/films
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "Ab",
+  "genre": 999999,
+  "releaseDate": "2099-12-08",
+  "rating": 15.0
+}
+
+### Create film with non-existent director
+POST http://localhost:5199/api/films
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "Test Film",
+  "genre": 4,
+  "releaseDate": "2023-01-01",
+  "rating": 7.0,
+  "directorId": "00000000-0000-0000-0000-000000000000"
+}

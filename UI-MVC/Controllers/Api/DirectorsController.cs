@@ -1,5 +1,6 @@
 using FilmManagement.BL;
-using FilmManagement.UI.Web.Models.Dto;
+using FilmManagement.UI.Web.Models.Dto.Director;
+using FilmManagement.UI.Web.Models.Dto.Film;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FilmManagement.UI.Web.Controllers.Api;

@@ -4,6 +4,8 @@
     ViewBag.Title = $"{Model.Name} - Actor Details";
 }
 
+<input type="hidden" id="actorId" value="@Model.ImdbId" />
+
 <h2>Actor Details</h2>
 
 <div class="card">
@@ -27,6 +29,55 @@
     </div>
 </div>
 
+<div class="card mt-3">
+    <div class="card-header">
+        <h3>Films</h3>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Release Date</th>
+                <th>Rating</th>
+                <th>Screen Time (min)</th>
+            </tr>
+            </thead>
+            <tbody id="filmsTableBody">
+            <!-- Data will be loaded via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h4>Add Film to Actor</h4>
+    </div>
+    <div class="card-body">
+        <form id="addFilmForm">
+            <div class="form-group">
+                <label for="filmId">Film</label>
+                <select id="filmId" class="form-control" required>
+                    <option value="">-- Select a film --</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="screenTime">Screen Time (minutes) - Optional</label>
+                <input type="number" id="screenTime" class="form-control" min="0" placeholder="Leave empty if unknown" />
+            </div>
+            
+            <button type="button" id="addFilmButton" class="btn btn-primary">Add Film</button>
+        </form>
+    </div>
+</div>
+
 <div class="mt-3">
     <a asp-controller="Film" asp-action="Index" class="btn btn-secondary">Back to Films</a>
 </div>
+
+@section Scripts {
+    <script src="~/js/actor-details.js"></script>
+}
