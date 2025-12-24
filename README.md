@@ -178,4 +178,41 @@ classDiagram
     Film --> Genre : has
 ```
 
+## Sprint 6
+
+### New Director
+
+#### Request
+
+```http
+POST http://localhost:5199/api/directors
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "Romeo Weyns",
+  "country": "Belgium",
+  "careerStart": 1995,
+  "careerEnd": null
+}
+```
+
+#### Response
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+Date: Wed, 24 Dec 2025 19:43:07 GMT
+Server: Kestrel
+Location: http://localhost:5199/api/Directors/04d45648-c449-4727-9314-938cbf8e8c6f
+Transfer-Encoding: chunked
+
+{
+  "imdbId": "04d45648-c449-4727-9314-938cbf8e8c6f",
+  "name": "Romeo Weyns",
+  "country": "Belgium",
+  "careerStart": 1995,
+  "careerEnd": null
+}
+```
 ---
