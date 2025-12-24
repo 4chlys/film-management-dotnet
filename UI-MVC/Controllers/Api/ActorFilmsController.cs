@@ -70,7 +70,7 @@ public class ActorFilmsController(IManager manager) : ControllerBase
         try
         {
             manager.UpdateActorFilmScreenTime(filmId, actorId, screenTime);
-            return NoContent();
+            return Ok($"Screen time {screenTime} updated.");
         }
         catch (InvalidOperationException ex)
         {
@@ -88,7 +88,7 @@ public class ActorFilmsController(IManager manager) : ControllerBase
         try
         {
             manager.RemoveActorFromFilm(filmId, actorId);
-            return NoContent();
+            return Ok("Actor-Film relationship deleted.");
         }
         catch (InvalidOperationException ex)
         {

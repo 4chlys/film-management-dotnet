@@ -1,12 +1,10 @@
-### Get all directors (JSON)
+### Get all directors
 GET http://localhost:5199/api/directors
 Accept: application/json
 
 > {%
     if (response.body?.$values?.length > 0) {
         client.global.set("directorId", response.body.$values[0].imdbId);
-    } else {
-        throw "No directors returned";
     }
 %}
 

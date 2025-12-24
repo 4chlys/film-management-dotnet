@@ -26,8 +26,7 @@ public class DirectorsController(IManager manager) : ControllerBase
                 Country = d.Country,
                 CareerStart = d.CareerStart,
                 CareerEnd = d.CareerEnd
-            }).ToList()
-        );
+            }));
     }
 
     [HttpGet("{directorId}")]
@@ -92,7 +91,6 @@ public class DirectorsController(IManager manager) : ControllerBase
                 ReleaseDate = f.ReleaseDate,
                 Rating = f.Rating,
                 DirectorName = f.Director?.Name
-            }).ToList()
-        );
+            }));
     }
 }
