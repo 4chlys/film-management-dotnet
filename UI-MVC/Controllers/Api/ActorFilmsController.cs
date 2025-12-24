@@ -88,7 +88,7 @@ public class ActorFilmsController(IManager manager) : ControllerBase
         try
         {
             manager.RemoveActorFromFilm(filmId, actorId);
-            return Ok("Actor-Film relationship deleted.");
+            return NoContent();
         }
         catch (InvalidOperationException ex)
         {

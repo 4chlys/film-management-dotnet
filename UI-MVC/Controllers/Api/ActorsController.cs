@@ -114,7 +114,7 @@ public class ActorsController(IManager manager) : ControllerBase
         try
         {
             manager.RemoveActor(actor);
-            return Ok(actor);
+            return NoContent();
         }
         catch (InvalidOperationException ex)
         {

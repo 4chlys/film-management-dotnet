@@ -140,7 +140,7 @@ public class FilmsController(IManager manager) : ControllerBase
         try
         {
             manager.RemoveFilm(film);
-            return Ok(film);
+            return NoContent();
         }
         catch (InvalidOperationException ex)
         {
