@@ -48,10 +48,8 @@ public class ActorFilmsController(IManager manager) : ControllerBase
             if (actorFilm == null)
                 return NotFound(new { error = "Actor-Film relationship not found" });
 
-            // Since we can't easily get screen time from just the actor,
-            // we need to get the full film with actors
             var film = manager.GetFilmWithActorsAndDirectors(filmId);
-            var af = film.ActorFilms.FirstOrDefault(x => x.Actor.ImdbId == actorId);
+            var af = film.ActorFilms.FirstOrDefault(af => af.Actor.ImdbId == actorId);
 
             return Ok(new ActorFilmDto
             {

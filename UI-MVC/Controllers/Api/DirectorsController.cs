@@ -50,7 +50,7 @@ public class DirectorsController(IManager manager) : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<DirectorDto> AddDirector(NewDirectorDto directorDto)
+    public ActionResult<DirectorDto> Create(NewDirectorDto directorDto)
     {
         var createdDirector = manager.AddDirector(
             directorDto.Name,
@@ -67,7 +67,7 @@ public class DirectorsController(IManager manager) : ControllerBase
             CareerEnd = createdDirector.CareerEnd
         };
         return CreatedAtAction(
-            "Get",
+            nameof(Get),
             new { directorId = createdDirector.ImdbId },
             dto
         );

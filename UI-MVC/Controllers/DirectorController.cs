@@ -6,7 +6,6 @@ namespace FilmManagement.UI.Web.Controllers;
 public class DirectorController(IManager manager) : Controller
 {
     [HttpGet]
-    [HttpGet]
     public IActionResult Index()
     {
         return View();

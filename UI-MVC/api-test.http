@@ -24,19 +24,15 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "name": "Denis Villeneuve",
-  "country": "Canada",
-  "careerStart": 1998,
+  "name": "Romeo Weyns",
+  "country": "Belgium",
+  "careerStart": 1995,
   "careerEnd": null
 }
 
 > {%
     client.global.set("newDirectorId", response.body.imdbId);
 %}
-
-#############
-### FILMS ###
-#############
 
 ### Get all films
 GET http://localhost:5199/api/films
@@ -48,8 +44,8 @@ Accept: application/json
     }
 %}
 
-### Get films by genre (Drama = 4, Action = 1, Drama|Action = 5)
-GET http://localhost:5199/api/films?genre=4
+### Get films by genre (Action = 1)
+GET http://localhost:5199/api/films?genre=1
 Accept: application/json
 
 ### Get specific film
@@ -62,9 +58,9 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "title": "Poor Things",
+  "title": "Dogtooth",
   "genre": 38,
-  "releaseDate": "2023-12-08",
+  "releaseDate": "2010-03-11",
   "rating": 7.9,
   "directorId": "{{directorId}}"
 }
@@ -79,7 +75,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "title": "Test Film Without Director",
+  "title": "1234",
   "genre": 4,
   "releaseDate": "2024-01-01",
   "rating": 7.0,
@@ -92,7 +88,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "title": "Poor Things (Updated)",
+  "title": "Dogtooth (Updated)",
   "genre": 38,
   "releaseDate": "2023-12-08",
   "rating": 8.0,
@@ -106,10 +102,6 @@ Accept: application/json
 ### Get actors of a film
 GET http://localhost:5199/api/films/{{filmId}}/actors
 Accept: application/json
-
-###############
-### ACTORS ###
-###############
 
 ### Get all actors
 GET http://localhost:5199/api/actors
@@ -131,9 +123,9 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "name": "Emma Stone",
-  "nationality": "American",
-  "dateOfBirth": "1988-11-06",
+  "name": "Romeo Weyns",
+  "nationality": "Belgian",
+  "dateOfBirth": "1995-03-20",
   "dateOfDeath": null
 }
 
@@ -147,9 +139,9 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "name": "Emma Stone (Updated)",
+  "name": "Romeo Weyns (Updated)",
   "nationality": "American",
-  "dateOfBirth": "1988-11-06",
+  "dateOfBirth": "1895-12-20",
   "dateOfDeath": null
 }
 
@@ -160,10 +152,6 @@ Accept: application/json
 ### Get films by actor
 GET http://localhost:5199/api/actors/{{actorId}}/films
 Accept: application/json
-
-#####################
-### ACTOR-FILMS ###
-#####################
 
 ### Create actor-film relationship
 POST http://localhost:5199/api/actorfilms
@@ -190,10 +178,6 @@ Content-Type: application/json
 ### Delete actor-film relationship
 DELETE http://localhost:5199/api/actorfilms/{{filmId}}/{{actorId}}
 Accept: application/json
-
-#####################
-### ERROR CASES ###
-#####################
 
 ### Get non-existent film
 GET http://localhost:5199/api/films/00000000-0000-0000-0000-000000000000
