@@ -8,22 +8,26 @@
 
 <div class="form-group">
     <label asp-for="Genre"></label>
-    @foreach (Genre genre in Enum.GetValues(typeof(Genre)))
-    {
-        if (genre != Genre.None)
+    <div class="genre-grid">
+        @foreach (Genre genre in Enum.GetValues(typeof(Genre)))
         {
-            <div class="form-check">
-                <input type="checkbox" 
-                       name="SelectedGenres" 
-                       value="@genre" 
-                       class="form-check-input"
-                       id="genre_@genre" />
-                <label class="form-check-label" for="genre_@genre">
-                    @genre
-                </label>
-            </div>
+            if (genre != Genre.None)
+            {
+                <div class="form-check">
+                    <input type="checkbox"
+                           name="SelectedGenres"
+                           value="@((int)genre)"
+                           class="form-check-input"
+                           id="genre_@genre"
+                           checked="@(Model.Genre.HasFlag(genre) ? "checked" : null)" />
+
+                    <label class="form-check-label" for="genre_@genre">
+                        @genre
+                    </label>
+                </div>
+            }
         }
-    }
+    </div>
     <span asp-validation-for="Genre" class="text-danger"></span>
 </div>
 
@@ -35,6 +39,6 @@
 
 <div class="form-group">
     <label asp-for="Rating"></label>
-    <input asp-for="Rating" type="number" step="0.1" min="0" max="10" class="form-control" />
+    <input asp-for="Rating" type="number" step="0.1" class="form-control" />
     <span asp-validation-for="Rating" class="text-danger"></span>
 </div>

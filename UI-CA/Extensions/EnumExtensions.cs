@@ -39,8 +39,7 @@ public static class EnumExtensions
     
     public static string GetEnumOptionsPrompt<T>() where T : struct, Enum
     {
-        var options = Enum.GetValues(typeof(T))
-            .Cast<Enum>()
+        var options = Enum.GetValues<T>()
             .Select(e => $"{Convert.ToInt32(e)}={e.GetDisplayName()}");
         
         return string.Join(", ", options);

@@ -70,7 +70,111 @@ public class Manager(IRepository repository) : IManager
     {
         repository.DeleteFilm(film);
     }
+
+    public Film AddFilmWithActors(string title, Genre genre, DateTime releaseDate, double rating, 
+        Guid? directorId, List<Guid> actorIds)
+    {
+        Director director = null;
+        if (directorId.HasValue)
+        {
+            director = repository.ReadDirector(directorId.Value);
+            if (director == null)
+                throw new InvalidOperationException($"Director with ID {directorId.Value} not found.");
+        }
+
+        var actorsToAdd = new List<Actor>();
+        if (actorIds != null && actorIds.Count != 0)
+        {
+            foreach (var actorId in actorIds)
+            {
+                var actor = repository.ReadActor(actorId);
+                if (actor == null)
+                    throw new InvalidOperationException($"Actor with ID {actorId} not found.");
+                actorsToAdd.Add(actor);
+            }
+        }
+
+        var filmToCreate = new Film
+        {
+            Title = title,
+            Genre = genre,
+            ReleaseDate = releaseDate,
+            Rating = rating,
+            Director = director
+        };
     
+        EntityValidator.ValidateEntity(filmToCreate);
+        repository.CreateFilm(filmToCreate);
+
+        foreach (var actor in actorsToAdd)
+        {
+            var actorFilm = new ActorFilm
+            {
+                Actor = actor,
+                Film = filmToCreate,
+                ScreenTime = null
+            };
+        
+            EntityValidator.ValidateEntity(actorFilm);
+            repository.CreateActorFilm(actorFilm);
+        }
+
+        return filmToCreate;
+    }
+
+    public void ChangeFilmWithActors(Film film, Guid? directorId, List<Guid> actorIds)
+    {
+        if (film == null)
+            throw new ArgumentNullException(nameof(film));
+
+        if (directorId.HasValue)
+        {
+            var director = repository.ReadDirector(directorId.Value);
+            if (director == null)
+                throw new InvalidOperationException($"Director with ID {directorId.Value} not found.");
+            film.Director = director;
+        }
+        else
+        {
+            film.Director = null;
+        }
+
+        EntityValidator.ValidateEntity(film);
+
+        repository.UpdateFilm(film);
+
+        SyncFilmActors(film.ImdbId, actorIds ?? new List<Guid>());
+    }
+
+    private void SyncFilmActors(Guid filmId, List<Guid> newActorIds)
+    {
+        var currentActors = repository.ReadActorsOfFilm(filmId).ToList();
+        var currentActorIds = currentActors.Select(a => a.ImdbId).ToHashSet();
+        var newActorIdSet = newActorIds.ToHashSet();
+
+        foreach (var actorId in newActorIds)
+        {
+            if (!currentActorIds.Contains(actorId))
+            {
+                var actor = repository.ReadActor(actorId);
+                if (actor == null)
+                    throw new InvalidOperationException($"Actor with ID {actorId} not found.");
+            }
+        }
+
+        var actorsToRemove = currentActorIds.Except(newActorIdSet);
+        foreach (var actorId in actorsToRemove)
+        {
+            RemoveActorFromFilm(filmId, actorId);
+        }
+
+        var actorsToAdd = newActorIdSet.Except(currentActorIds);
+        foreach (var actorId in actorsToAdd)
+        {
+            AddActorToFilm(filmId, actorId, null);
+        }
+    }
+
     public void AddActorToFilm(Guid filmId, Guid actorId, int? screenTime)
     {
         var film = repository.ReadFilm(filmId);

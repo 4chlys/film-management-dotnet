@@ -37,17 +37,6 @@ namespace FilmManagement.BL.Domain.Validation
                 {
                     return new ValidationResult($"{context.MemberName} contains invalid flag values.");
                 }
-                /*Start:     acc = 0
-                Iteration 1: acc = 0 | 1 (Action)      = 1
-                Iteration 2: acc = 1 | 2 (Comedy)      = 3
-                Iteration 3: acc = 3 | 4 (Drama)       = 7
-                Iteration 4: acc = 7 | 8 (Horror)      = 15
-                Iteration 5: acc = 15 | 16 (Romance)   = 31
-                Iteration 6: acc = 31 | 32 (SciFi)     = 63
-                Iteration 7: acc = 63 | 64 (Thriller)  = 127
-                Iteration 8: acc = 127 | 128 (Documentary) = 255
-
-                Final result: 255 (binary: 11111111)*/
             }
             else
             {

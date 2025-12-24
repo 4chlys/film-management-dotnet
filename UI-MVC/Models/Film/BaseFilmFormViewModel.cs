@@ -13,7 +13,7 @@ public abstract class BaseFilmFormViewModel
     [CustomValidation(typeof(EnumValidator), "DefinedValuesOnly")]
     public Genre Genre { get; set; } 
     [DateRange(minYear: 1800, mustBePast: true)]
-    public DateTime ReleaseDate { get; set; }
+    public DateTime ReleaseDate { get; set; } = new DateTime(1900, 1, 1);
     [Range(0, 10)]
     public double Rating { get; set; }
     

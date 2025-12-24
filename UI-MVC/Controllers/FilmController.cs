@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL;
-using FilmManagement.BL.Domain;
+using FilmManagement.UI.Web.Controllers.Extensions;
 using FilmManagement.UI.Web.Models.Film;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,15 +9,12 @@ namespace FilmManagement.UI.Web.Controllers;
 
 public class FilmController(IManager manager) : Controller
 {
-    /* -------------------- INDEX -------------------- */
-
+    [HttpGet]
     public IActionResult Index()
     {
         var films = manager.GetAllFilmsWithDirectors();
         return View(films);
     }
-
-    /* -------------------- CREATE -------------------- */
 
     [HttpGet]
     public IActionResult Create()
@@ -30,75 +27,51 @@ public class FilmController(IManager manager) : Controller
     public IActionResult Create(NewFilmViewModel model)
     {
         if (!ModelState.IsValid)
-            return ReturnCreateView(model);
-
-        var actorErrors = ValidateActorIds(model.SelectedActorIds);
-        var director = ValidateDirectorId(model.DirectorId, out var directorError);
-
-        AddErrors("SelectedActorIds", actorErrors);
-        AddError("DirectorId", directorError);
-
-        if (!ModelState.IsValid)
-            return ReturnCreateView(model);
+        {
+            PopulateSelectLists();
+            return View(model);
+        }
 
         try
         {
-            var film = manager.AddFilm(
+            var film = manager.AddFilmWithActors(
                 model.Title,
                 model.Genre,
                 model.ReleaseDate,
                 model.Rating,
-                director
+                model.DirectorId,
+                model.SelectedActorIds ?? new List<Guid>()
             );
-
-            AddActorsToFilm(film.ImdbId, model.SelectedActorIds);
-
-            return RedirectToAction("Details", new { id = film.ImdbId });
+            return RedirectToAction(nameof(Details), new { id = film.ImdbId });
         }
         catch (ValidationException ex)
         {
+            AddValidationErrors(ex.Message);
+            PopulateSelectLists();
+            return View(model);
+        }
+        catch (InvalidOperationException ex)
+        {
             ModelState.AddModelError("", ex.Message);
-            return ReturnCreateView(model);
+            PopulateSelectLists();
+            return View(model);
         }
     }
-
-    /* -------------------- DETAILS -------------------- */
-
+    
+    [HttpGet]
     public IActionResult Details(Guid id)
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
         if (film == null)
             return NotFound();
 
-        var vm = new DetailsFilmViewModel
-        {
-            ImdbId = film.ImdbId,
-            Title = film.Title,
-            Genre = GetGenreDisplayString(film.Genre),
-            ReleaseDate = film.ReleaseDate,
-            Rating = film.Rating,
-            Director = film.Director == null
-                ? null
-                : new DetailsFilmViewModel.DirectorInfo
-                {
-                    ImdbId = film.Director.ImdbId,
-                    Name = film.Director.Name
-                },
-            Actors = film.ActorFilms?
-                .Select(af => new DetailsFilmViewModel.ActorInfo
-                {
-                    ImdbId = af.Actor.ImdbId,
-                    Name = af.Actor.Name,
-                    DateOfBirth = af.Actor.DateOfBirth,
-                    ScreenTime = af.ScreenTime
-                })
-                .ToList() ?? new()
-        };
+        var vm = MapToDetailsViewModel(film);
+     
+        if (TempData["ErrorMessage"] != null)
+            ViewBag.ErrorMessage = TempData["ErrorMessage"];
 
         return View(vm);
     }
-
-    /* -------------------- EDIT -------------------- */
 
     [HttpGet]
     public IActionResult Edit(Guid id)
@@ -107,7 +80,130 @@ public class FilmController(IManager manager) : Controller
         if (film == null)
             return NotFound();
 
-        var model = new EditFilmViewModel
+        var vm = MapToEditViewModel(film);
+        PopulateSelectLists(vm.DirectorId);
+        return View(vm);
+    }
+
+    [HttpPost]
+    public IActionResult Edit(Guid id, EditFilmViewModel vm)
+    {
+        if (!ModelState.IsValid)
+        {
+            PopulateSelectLists(vm.DirectorId);
+            return View(vm);
+        }
+
+        try
+        {
+            var film = manager.GetFilm(id);
+            if (film == null)
+                return NotFound();
+
+            film.Title = vm.Title;
+            film.Genre = vm.Genre;
+            film.ReleaseDate = vm.ReleaseDate;
+            film.Rating = vm.Rating;
+
+            manager.ChangeFilmWithActors(
+                film,
+                vm.DirectorId,
+                vm.SelectedActorIds ?? new List<Guid>()
+            );
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (ValidationException ex)
+        {
+            AddValidationErrors(ex.Message);
+            PopulateSelectLists(vm.DirectorId);
+            return View(vm);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError("", ex.Message);
+            PopulateSelectLists(vm.DirectorId);
+            return View(vm);
+        }
+    }
+
+    [HttpGet]
+    public IActionResult Delete(Guid id)
+    {
+        var film = manager.GetFilm(id);
+        if (film == null)
+            return NotFound();
+
+        var vm = MapToDeleteViewModel(film);
+        return View(vm);
+    }
+
+    [HttpPost]
+    public IActionResult DeletePost(Guid id)
+    {
+        try
+        {
+            var film = manager.GetFilm(id);
+            if (film == null)
+                return NotFound();
+
+            manager.RemoveFilm(film);
+            return RedirectToAction(nameof(Index));
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+            return RedirectToAction(nameof(Details), new { id });
+        }
+    }
+
+    [HttpPost]
+    public IActionResult UpdateScreenTime(Guid filmId, Guid actorId, int? screenTime)
+    {
+        try
+        {
+            manager.UpdateActorFilmScreenTime(filmId, actorId, screenTime);
+        }
+        catch (ValidationException ex)
+        {
+            TempData["ErrorMessage"] = $"Validation error: {ex.Message}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Details), new { id = filmId });
+    }
+
+    private DetailsFilmViewModel MapToDetailsViewModel(BL.Domain.Film film)
+    {
+        return new DetailsFilmViewModel
+        {
+            ImdbId = film.ImdbId,
+            Title = film.Title,
+            Genre = film.Genre.ToDisplayString(),
+            ReleaseDate = film.ReleaseDate,
+            Rating = film.Rating,
+            Director = film.Director == null ? null : new DetailsFilmViewModel.DirectorInfo
+            {
+                ImdbId = film.Director.ImdbId,
+                Name = film.Director.Name
+            },
+            Actors = film.ActorFilms?
+                .Select(af => new DetailsFilmViewModel.ActorInfo
+                {
+                    ImdbId = af.Actor.ImdbId,
+                    Name = af.Actor.Name,
+                    DateOfBirth = af.Actor.DateOfBirth,
+                    ScreenTime = af.ScreenTime
+                })
+                .ToList() ?? []
+        };
+    }
+
+    private EditFilmViewModel MapToEditViewModel(BL.Domain.Film film)
+    {
+        return new EditFilmViewModel
         {
             ImdbId = film.ImdbId,
             Title = film.Title,
@@ -117,157 +213,23 @@ public class FilmController(IManager manager) : Controller
             DirectorId = film.Director?.ImdbId,
             SelectedActorIds = film.ActorFilms?
                 .Select(af => af.Actor.ImdbId)
-                .ToList() ?? new()
+                .ToList() ?? []
         };
-
-        PopulateSelectLists(model.DirectorId);
-        return View(model);
     }
 
-    [HttpPost]
-    public IActionResult Edit(Guid id, EditFilmViewModel model)
+    private DeleteFilmViewModel MapToDeleteViewModel(BL.Domain.Film film)
     {
-        if (!ModelState.IsValid)
-        {
-            PopulateSelectLists(model.DirectorId);
-            return View(model);
-        }
-
-        var actorErrors = ValidateActorIds(model.SelectedActorIds);
-        var director = ValidateDirectorId(model.DirectorId, out var directorError);
-
-        AddErrors("SelectedActorIds", actorErrors);
-        AddError("DirectorId", directorError);
-
-        if (!ModelState.IsValid)
-        {
-            PopulateSelectLists(model.DirectorId);
-            return View(model);
-        }
-
-        var film = manager.GetFilm(id);
-        if (film == null)
-            return NotFound();
-
-        film.Title = model.Title;
-        film.Genre = model.Genre;
-        film.ReleaseDate = model.ReleaseDate;
-        film.Rating = model.Rating;
-        film.Director = director;
-
-        manager.ChangeFilm(film);
-
-        SyncActors(id, model.SelectedActorIds);
-
-        return RedirectToAction("Details", new { id });
-    }
-
-    /* -------------------- DELETE -------------------- */
-
-    [HttpGet]
-    public IActionResult Delete(Guid id)
-    {
-        var film = manager.GetFilm(id);
-        if (film == null)
-            return NotFound();
-
-        return View(new DeleteFilmViewModel
+        return new DeleteFilmViewModel
         {
             ImdbId = film.ImdbId,
             Title = film.Title,
-            Genre = GetGenreDisplayString(film.Genre),
+            Genre = film.Genre.ToDisplayString(),
             ReleaseDate = film.ReleaseDate,
             Rating = film.Rating,
             DirectorName = film.Director?.Name ?? "Unknown"
-        });
+        };
     }
-
-    [HttpPost]
-    public IActionResult DeletePost(Guid id)
-    {
-        var film = manager.GetFilm(id);
-        if (film == null)
-            return NotFound();
-
-        manager.RemoveFilm(film);
-        return RedirectToAction("Index");
-    }
-
-    /* -------------------- HELPERS -------------------- */
-
-    private List<string> ValidateActorIds(IEnumerable<Guid>? actorIds)
-    {
-        var errors = new List<string>();
-
-        if (actorIds == null)
-            return errors;
-
-        foreach (var actorId in actorIds)
-        {
-            if (manager.GetActor(actorId) == null)
-                errors.Add($"Actor with ID {actorId} not found.");
-        }
-
-        return errors;
-    }
-
-    private Director? ValidateDirectorId(Guid? directorId, out string? error)
-    {
-        error = null;
-
-        if (!directorId.HasValue)
-            return null;
-
-        var director = manager.GetDirector(directorId.Value);
-        if (director == null)
-        {
-            error = "Selected director not found.";
-            return null;
-        }
-
-        return director;
-    }
-
-    private void AddActorsToFilm(Guid filmId, IEnumerable<Guid>? actorIds)
-    {
-        if (actorIds == null)
-            return;
-
-        foreach (var actorId in actorIds)
-            manager.AddActorToFilm(filmId, actorId, null);
-    }
-
-    private void SyncActors(Guid filmId, List<Guid> selectedActorIds)
-    {
-        var existing = manager.GetActorsOfFilm(filmId)
-            .Select(a => a.ImdbId)
-            .ToHashSet();
-
-        foreach (var actorId in existing.Except(selectedActorIds))
-            manager.RemoveActorFromFilm(filmId, actorId);
-
-        foreach (var actorId in selectedActorIds.Except(existing))
-            manager.AddActorToFilm(filmId, actorId, null);
-    }
-
-    private void AddErrors(string key, IEnumerable<string> errors)
-    {
-        foreach (var error in errors)
-            ModelState.AddModelError(key, error);
-    }
-
-    private void AddError(string key, string? error)
-    {
-        if (error != null)
-            ModelState.AddModelError(key, error);
-    }
-
-    private IActionResult ReturnCreateView(NewFilmViewModel model)
-    {
-        PopulateSelectLists();
-        return View(model);
-    }
-
+    
     private void PopulateSelectLists(Guid? selectedDirectorId = null)
     {
         ViewBag.Directors = new SelectList(
@@ -284,11 +246,12 @@ public class FilmController(IManager manager) : Controller
         );
     }
 
-    private string GetGenreDisplayString(Genre genre)
+    private void AddValidationErrors(string errorMessage)
     {
-        return string.Join(", ",
-            Enum.GetValues<Genre>()
-                .Where(g => g != Genre.None && genre.HasFlag(g))
-        );
+        var errors = errorMessage.Split('|', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var error in errors)
+        {
+            ModelState.AddModelError("", error.Trim());
+        }
     }
 }

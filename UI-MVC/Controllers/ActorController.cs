@@ -5,6 +5,7 @@ namespace FilmManagement.UI.Web.Controllers;
 
 public class ActorController(IManager manager) : Controller
 {
+    [HttpGet]
     public IActionResult Details(Guid id)
     {
         var actor = manager.GetActor(id);
