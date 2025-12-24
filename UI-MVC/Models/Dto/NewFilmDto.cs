@@ -6,8 +6,6 @@ namespace FilmManagement.UI.Web.Models.Dto;
 
 public class NewFilmDto
 {
-    public Guid ImdbId { get; set; }
-    
     [Required]
     [StringLength(100, MinimumLength = 3)]
     public string Title { get; set; } = string.Empty;

@@ -6,10 +6,16 @@ namespace FilmManagement.UI.Web.Controllers;
 public class DirectorController(IManager manager) : Controller
 {
     [HttpGet]
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return View();
+    }
+    
+    [HttpGet]
     public IActionResult Details(Guid id)
     {
-        var director = manager.GetDirector(id);
-        
-        return View(director);
+        return View(manager.GetDirector(id));
     }
+
 }

@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 using FilmManagement.BL.Domain;
 using FilmManagement.BL.Domain.Validation;
 using FilmManagement.DAL;
+using Microsoft.EntityFrameworkCore;
 
 namespace FilmManagement.BL;
 
@@ -17,15 +19,24 @@ public class Manager(IRepository repository) : IManager
             Rating = rating,
             Director = director
         };
-        
+
         EntityValidator.ValidateEntity(filmToCreate);
-        repository.CreateFilm(filmToCreate);
+        try
+        {
+            repository.CreateFilm(filmToCreate);
+        }
+        catch (DbUpdateException)
+        {
+            throw new ValidationException("A film with this title already exists.");
+        }
+
+
         return filmToCreate;
     }
 
     public Film GetFilm(Guid imdbId)
     {
-        return repository.ReadFilm(imdbId);       
+        return repository.ReadFilm(imdbId);
     }
 
     public Film GetFilmWithDirector(Guid imdbId)
@@ -35,7 +46,7 @@ public class Manager(IRepository repository) : IManager
 
     public Film GetFilmWithActorsAndDirectors(Guid imdbId)
     {
-        return repository.ReadFilmWithActorsAndDirectors(imdbId);      
+        return repository.ReadFilmWithActorsAndDirectors(imdbId);
     }
 
     public IEnumerable<Film> GetAllFilms()
@@ -56,7 +67,7 @@ public class Manager(IRepository repository) : IManager
     public IEnumerable<Film> GetFilmsByGenre(Genre genre)
     {
         Expression<Func<Film, bool>> predicate = f => (f.Genre & genre) != 0;
-        
+
         return repository.ReadFilmsByCriteria(predicate);
     }
 
@@ -65,13 +76,13 @@ public class Manager(IRepository repository) : IManager
         EntityValidator.ValidateEntity(film);
         repository.UpdateFilm(film);
     }
-    
+
     public void RemoveFilm(Film film)
     {
         repository.DeleteFilm(film);
     }
 
-    public Film AddFilmWithActors(string title, Genre genre, DateTime releaseDate, double rating, 
+    public Film AddFilmWithActors(string title, Genre genre, DateTime releaseDate, double rating,
         Guid? directorId, List<Guid> actorIds)
     {
         Director director = null;
@@ -94,17 +105,7 @@ public class Manager(IRepository repository) : IManager
             }
         }
 
-        var filmToCreate = new Film
-        {
-            Title = title,
-            Genre = genre,
-            ReleaseDate = releaseDate,
-            Rating = rating,
-            Director = director
-        };
-    
-        EntityValidator.ValidateEntity(filmToCreate);
-        repository.CreateFilm(filmToCreate);
+        var filmToCreate = AddFilm(title, genre, releaseDate, rating, director);
 
         foreach (var actor in actorsToAdd)
         {
@@ -114,7 +115,7 @@ public class Manager(IRepository repository) : IManager
                 Film = filmToCreate,
                 ScreenTime = null
             };
-        
+
             EntityValidator.ValidateEntity(actorFilm);
             repository.CreateActorFilm(actorFilm);
         }
@@ -191,7 +192,7 @@ public class Manager(IRepository repository) : IManager
             Film = film,
             ScreenTime = screenTime
         };
-        
+
         EntityValidator.ValidateEntity(actorFilm);
 
         if (repository.ActorFilmExists(actorId, filmId))
@@ -229,7 +230,7 @@ public class Manager(IRepository repository) : IManager
         var actorFilm = repository.ReadActorFilm(actorId, filmId);
         if (actorFilm == null)
             throw new InvalidOperationException("Actor-Film relationship not found.");
-    
+
         actorFilm.ScreenTime = screenTime;
         EntityValidator.ValidateEntity(actorFilm);
         repository.UpdateActorFilm(actorFilm);
@@ -243,9 +244,9 @@ public class Manager(IRepository repository) : IManager
             Name = name,
             Nationality = nationality,
             DateOfBirth = dateOfBirth,
-            DateOfDeath = dateOfDeath      
+            DateOfDeath = dateOfDeath
         };
-    
+
         EntityValidator.ValidateEntity(actorToCreate);
         repository.CreateActor(actorToCreate);
         return actorToCreate;
@@ -253,12 +254,12 @@ public class Manager(IRepository repository) : IManager
 
     public Actor GetActor(Guid imdbId)
     {
-        return repository.ReadActor(imdbId);       
+        return repository.ReadActor(imdbId);
     }
 
     public Actor GetActorWithFilms(Guid imdbId)
     {
-        return repository.ReadActorWithFilms(imdbId);      
+        return repository.ReadActorWithFilms(imdbId);
     }
 
     public IEnumerable<Actor> GetAllActors()
@@ -274,24 +275,24 @@ public class Manager(IRepository repository) : IManager
     public IEnumerable<Actor> GetActorsByCriteria(string nameFilter, int? minimumAge)
     {
         Expression<Func<Actor, bool>> predicate = actor => true;
-        
+
         if (!string.IsNullOrWhiteSpace(nameFilter))
         {
             var upperFilter = nameFilter.ToUpper();
-            predicate = CombinePredicates(predicate, 
+            predicate = CombinePredicates(predicate,
                 a => a.Name.ToUpper().Contains(upperFilter));
         }
-        
+
         if (minimumAge.HasValue)
         {
             var maxDateOfBirth = DateTime.Today.AddYears(-minimumAge.Value);
-            predicate = CombinePredicates(predicate, 
+            predicate = CombinePredicates(predicate,
                 a => a.DateOfBirth <= maxDateOfBirth);
         }
-        
+
         return repository.ReadActorsByCriteria(predicate);
     }
-    
+
     public IEnumerable<Actor> GetActorsOfFilm(Guid imdbId)
     {
         return repository.ReadActorsOfFilm(imdbId);
@@ -302,7 +303,7 @@ public class Manager(IRepository repository) : IManager
         EntityValidator.ValidateEntity(actor);
         repository.UpdateActor(actor);
     }
-    
+
     public void RemoveActor(Actor actor)
     {
         repository.DeleteActor(actor);
@@ -317,7 +318,7 @@ public class Manager(IRepository repository) : IManager
             CareerStart = yearStarted,
             CareerEnd = yearEnded
         };
-        
+
         EntityValidator.ValidateEntity(filmDirectorToCreate);
         repository.CreateDirector(filmDirectorToCreate);
         return filmDirectorToCreate;
@@ -325,12 +326,12 @@ public class Manager(IRepository repository) : IManager
 
     public Director GetDirector(Guid imdbId)
     {
-        return repository.ReadDirector(imdbId);      
+        return repository.ReadDirector(imdbId);
     }
 
     public Director GetDirectorWithFilms(Guid imdbId)
     {
-        return repository.ReadDirectorWithFilms(imdbId);     
+        return repository.ReadDirectorWithFilms(imdbId);
     }
 
     public Director GetDirectorByName(string name)
@@ -347,13 +348,13 @@ public class Manager(IRepository repository) : IManager
     {
         return repository.ReadAllDirectorsWithFilms();
     }
-    
+
     public void ChangeDirector(Director director)
     {
         EntityValidator.ValidateEntity(director);
         repository.UpdateDirector(director);
     }
-    
+
     public void RemoveDirector(Director director)
     {
         repository.DeleteDirector(director);
@@ -363,18 +364,18 @@ public class Manager(IRepository repository) : IManager
     {
         return Enum.GetValues<Genre>();
     }
-    
+
     private Expression<Func<T, bool>> CombinePredicates<T>(
-        Expression<Func<T, bool>> first, 
+        Expression<Func<T, bool>> first,
         Expression<Func<T, bool>> second)
     {
         var parameter = Expression.Parameter(typeof(T));
-        
+
         var combined = Expression.AndAlso(
             Expression.Invoke(first, parameter),
             Expression.Invoke(second, parameter)
         );
-        
+
         return Expression.Lambda<Func<T, bool>>(combined, parameter);
     }
 }

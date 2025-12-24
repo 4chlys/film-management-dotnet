@@ -32,6 +32,10 @@ public class FilmDbContext(DbContextOptions options) : DbContext(options)
             .HasIndex(d => d.Name);
         
         modelBuilder.Entity<Film>()
+            .HasIndex(f => f.Title)
+            .IsUnique();
+        
+        modelBuilder.Entity<Film>()
             .Property<Guid?>("DirectorFK_Shadow");
         modelBuilder.Entity<ActorFilm>()
             .Property<Guid?>("ActorFK_Shadow");

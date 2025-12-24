@@ -18,7 +18,7 @@ public class Film
     [DateRange(minYear: 1800, mustBePast: true)]
     public DateTime ReleaseDate { get; set; }
     
-    [Range(0, 10)]
+    
     public double Rating { get; set; }
     
     public Director Director { get; set; }

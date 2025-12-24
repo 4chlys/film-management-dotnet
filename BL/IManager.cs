@@ -7,7 +7,6 @@ namespace FilmManagement.BL;
 public interface IManager
 {
     Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director);
-    void AddActorToFilm(Guid filmId, Guid actorId, int? screenTime);
     Film GetFilm(Guid imdbId); 
     Film GetFilmWithDirector(Guid imdbId);
     Film GetFilmWithActorsAndDirectors(Guid imdbId);
@@ -21,6 +20,7 @@ public interface IManager
     Film AddFilmWithActors(string title, Genre genre, DateTime releaseDate, double rating, 
         Guid? directorId, List<Guid> actorIds);
     void ChangeFilmWithActors(Film film, Guid? directorId, List<Guid> actorIds);
+    void AddActorToFilm(Guid filmId, Guid actorId, int? screenTime);
     void RemoveActorFromFilm(Guid filmId, Guid actorId);
     void UpdateActorFilmScreenTime(Guid filmId, Guid actorId, int? screenTime);
     
