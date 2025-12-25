@@ -30,7 +30,7 @@ async function loadActors() {
                         <td>${dateOfBirthDisplay}</td>
                         <td>${dateOfDeath}</td>
                         <td>${actor.age}</td>
-                        <td><a href="/Actor/Details?id=${actor.imdbId}">Details</a></td>
+                        <td><a href="/Actor/Details/${actor.imdbId}">Details</a></td>
                     </tr>
                 `;
             }

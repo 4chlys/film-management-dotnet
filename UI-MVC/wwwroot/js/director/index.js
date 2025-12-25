@@ -24,7 +24,7 @@ async function loadDirectors() {
                         <td>${director.country}</td>
                         <td>${director.careerStart || 'Unknown'}</td>
                         <td>${careerEnd}</td>
-                        <td><a href="/Director/Details?id=${director.imdbId}">Details</a></td>
+                        <td><a href="/Director/Details/${director.imdbId}">Details</a></td>
                     </tr>
                 `;
             }

@@ -33,7 +33,7 @@ async function loadActorFilms() {
 
                 filmsTableBody.innerHTML += `
                     <tr>
-                        <td><a href="/Film/Details?id=${film.imdbId}">${film.title}</a></td>
+                        <td><a href="/Film/Details/${film.imdbId}">${film.title}</a></td>
                         <td>${genreDisplay}</td>
                         <td>${releaseDateDisplay}</td>
                         <td>${film.rating.toFixed(1)}</td>
