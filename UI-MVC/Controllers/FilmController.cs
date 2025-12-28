@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL;
 using FilmManagement.UI.Web.Controllers.Extensions;
+using FilmManagement.UI.Web.Models;
 using FilmManagement.UI.Web.Models.Film;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -63,7 +64,13 @@ public class FilmController(IManager manager) : Controller
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
         if (film == null)
-            return NotFound();
+        {
+            return View("Error", new ErrorViewModel(
+                404,
+                "Film Not Found",
+                $"The film with ID '{id}' could not be found. It may have been deleted or never existed."
+            ));
+        }
 
         var vm = MapToDetailsViewModel(film);
      
@@ -78,7 +85,13 @@ public class FilmController(IManager manager) : Controller
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
         if (film == null)
-            return NotFound();
+        {
+            return View("Error", new ErrorViewModel(
+                404,
+                "Film Not Found",
+                $"Cannot edit film with ID '{id}' because it does not exist."
+            ));
+        }
 
         var vm = MapToEditViewModel(film);
         PopulateSelectLists(vm.DirectorId);
@@ -98,7 +111,13 @@ public class FilmController(IManager manager) : Controller
         {
             var film = manager.GetFilm(id);
             if (film == null)
-                return NotFound();
+            {
+                return View("Error", new ErrorViewModel(
+                    404,
+                    "Film Not Found",
+                    $"Cannot edit film with ID '{id}' because it does not exist."
+                ));
+            }
 
             film.Title = vm.Title;
             film.Genre = vm.Genre;
@@ -131,7 +150,13 @@ public class FilmController(IManager manager) : Controller
     {
         var film = manager.GetFilm(id);
         if (film == null)
-            return NotFound();
+        {
+            return View("Error", new ErrorViewModel(
+                404,
+                "Film Not Found",
+                $"Cannot delete film with ID '{id}' because it does not exist."
+            ));
+        }
 
         var vm = MapToDeleteViewModel(film);
         return View(vm);
@@ -144,7 +169,13 @@ public class FilmController(IManager manager) : Controller
         {
             var film = manager.GetFilm(id);
             if (film == null)
-                return NotFound();
+            {
+                return View("Error", new ErrorViewModel(
+                    404,
+                    "Film Not Found",
+                    $"Cannot delete film with ID '{id}' because it does not exist."
+                ));
+            }
 
             manager.RemoveFilm(film);
             return RedirectToAction(nameof(Index));

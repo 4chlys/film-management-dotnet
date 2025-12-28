@@ -1,4 +1,5 @@
 using FilmManagement.BL;
+using FilmManagement.UI.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FilmManagement.UI.Web.Controllers;
@@ -14,7 +15,16 @@ public class DirectorController(IManager manager) : Controller
     [HttpGet]
     public IActionResult Details(Guid id)
     {
-        return View(manager.GetDirector(id));
-    }
+        var director = manager.GetDirector(id);
+        if (director == null)
+        {
+            return View("Error", new ErrorViewModel(
+                404,
+                "Director Not Found",
+                $"The director with ID '{id}' could not be found. It may have been deleted or never existed."
+            ));
+        }
 
+        return View(director);
+    }
 }
