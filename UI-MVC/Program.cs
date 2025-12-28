@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<FilmDbContext>(optionsBuilder => optionsBuilder.UseSqlite("Data Source=FilmManagementDb.sqlite"));
+builder.Services.AddDbContext<FilmDbContext>(optionsBuilder => optionsBuilder.UseSqlite("Data Source=filmmanagementdb.sqlite"));
 builder.Services.AddScoped<IRepository, EfRepository>();
 builder.Services.AddScoped<IManager, Manager>();
 builder.Services.AddLiveMonitoring();
