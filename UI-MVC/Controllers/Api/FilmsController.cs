@@ -122,7 +122,7 @@ public class FilmsController(IManager manager) : ControllerBase
             film.Director = director;
 
             manager.ChangeFilm(film);
-            return Ok(film);
+            return NoContent();
         }
         catch (ValidationException ex)
         {

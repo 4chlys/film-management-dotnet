@@ -98,12 +98,7 @@ public class EfRepository(FilmDbContext context) : IRepository
     
     public ActorFilm ReadActorFilm(Guid actorId, Guid filmId)
     {
-        return context.ActorFilms
-            .Include(af => af.Actor)
-            .Include(af => af.Film)
-            .FirstOrDefault(af => 
-                Property<Guid>(af, "ActorFK_Shadow") == actorId && 
-                Property<Guid>(af, "FilmFK_Shadow") == filmId);
+        return context.ActorFilms.SingleOrDefault(af => af.Actor.ImdbId == actorId && af.Film.ImdbId == filmId);
     }
 
     public void UpdateActorFilm(ActorFilm actorFilm)
@@ -120,6 +115,8 @@ public class EfRepository(FilmDbContext context) : IRepository
         if (context.Entry(actorFilm.Film).State == EntityState.Detached)
             context.Films.Attach(actorFilm.Film);
 
+        
+        
         context.ActorFilms.Remove(actorFilm);
         context.SaveChanges();
     }

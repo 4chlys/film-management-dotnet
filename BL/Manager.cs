@@ -204,23 +204,11 @@ public class Manager(IRepository repository) : IManager
 
     public void RemoveActorFromFilm(Guid filmId, Guid actorId)
     {
-        var film = repository.ReadFilm(filmId);
-        var actor = repository.ReadActor(actorId);
-
-        if (film == null)
-            throw new InvalidOperationException("Film not found.");
-        if (actor == null)
-            throw new InvalidOperationException("Actor not found.");
-
         if (!repository.ActorFilmExists(actorId, filmId))
             throw new InvalidOperationException(
                 "This actor is not associated with this film.");
 
-        var actorFilm = new ActorFilm
-        {
-            Actor = actor,
-            Film = film
-        };
+        var actorFilm = repository.ReadActorFilm(actorId, filmId);
 
         repository.DeleteActorFilm(actorFilm);
     }

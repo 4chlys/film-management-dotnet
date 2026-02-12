@@ -95,7 +95,7 @@ public class ActorsController(IManager manager) : ControllerBase
             actor.DateOfDeath = dto.DateOfDeath;
 
             manager.ChangeActor(actor);
-            return Ok(actor);
+            return NoContent();
         }
         catch (ValidationException ex)
         {

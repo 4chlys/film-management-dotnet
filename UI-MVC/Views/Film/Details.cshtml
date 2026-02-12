@@ -6,6 +6,13 @@
 
 <h2>Film Details</h2>
 
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
 <partial name="_FilmDetailsPartial" model="Model" />
 
 <div class="mt-3">
