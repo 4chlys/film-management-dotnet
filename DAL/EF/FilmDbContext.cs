@@ -12,7 +12,8 @@ public class FilmDbContext(DbContextOptions options) : IdentityDbContext(options
     public DbSet<Actor> Actors { get; set; }
     public DbSet<ActorFilm> ActorFilms { get; set; }
     public DbSet<Director> Directors { get; set; }
-
+    
+    
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
@@ -63,6 +64,13 @@ public class FilmDbContext(DbContextOptions options) : IdentityDbContext(options
             .WithMany(film => film.ActorFilms)
             .HasForeignKey("FilmFK_Shadow")
             .IsRequired();
+
+        modelBuilder.Entity<Film>()
+            .HasOne(film => film.Maintainer)
+            .WithMany()
+            .IsRequired(false);
+
+        modelBuilder.Entity<Film>().Navigation(f => f.Maintainer).AutoInclude();
         
         base.OnModelCreating(modelBuilder);
     }

@@ -25,6 +25,8 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<FilmDbContext>();
 
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("IsAdmin", policy => policy.RequireRole(nameof(UserRoleName.Admin))));
 
 var app = builder.Build();
 
@@ -32,13 +34,16 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
-    if (ctx.CreateDatabase(dropDatabase: true))
-    {
-        DataSeeder.Seed(ctx);
-    }
-    
     var userManager = scope.ServiceProvider.GetService<UserManager<IdentityUser>>();
     var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
+    
+    if (ctx.CreateDatabase(dropDatabase: true))
+    {
+        var identitySeeder = new IdentitySeeder(userManager, roleManager);
+        identitySeeder.Seed();
+        
+        DataSeeder.Seed(ctx);
+    }
 }
 
 if (!app.Environment.IsDevelopment())

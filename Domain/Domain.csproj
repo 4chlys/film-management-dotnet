@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="KdGTI.Analyzers.Students" Version="0.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.13" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using FilmManagement.BL.Domain;
+using Microsoft.AspNetCore.Identity;
 
 namespace FilmManagement.DAL.EF;
 
@@ -6,6 +7,10 @@ public static class DataSeeder
 {
     public static void Seed(FilmDbContext context)
     {
+        // === USERS ===
+        var admin = context.Users.Single(u => u.UserName == "admin@test.tld");
+        var test1 = context.Users.Single(u => u.UserName == "test1@test.tld");
+        
         // === DIRECTORS ===
         var lanthimos = new Director 
         { 
@@ -225,7 +230,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.Romance,
             ReleaseDate = new DateTime(2015, 10, 16),
             Rating = 8.2,
-            Director = lanthimos
+            Director = lanthimos,
+            Maintainer = admin
         };
         
         var poorThings = new Film
@@ -234,7 +240,8 @@ public static class DataSeeder
             Genre = Genre.Comedy | Genre.Romance | Genre.SciFi,
             ReleaseDate = new DateTime(2023, 12, 8),
             Rating = 7.9,
-            Director = lanthimos
+            Director = lanthimos,
+            Maintainer = test1
         };
 
         var theKillingOfASacredDeer = new Film
@@ -252,7 +259,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.Comedy,
             ReleaseDate = new DateTime(2018, 11, 23),
             Rating = 7.5,
-            Director = lanthimos
+            Director = lanthimos,
+            Maintainer = admin
         };
         
         // Kubrick films
@@ -271,7 +279,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.SciFi,
             ReleaseDate = new DateTime(1971, 12, 19),
             Rating = 8.3,
-            Director = kubrick
+            Director = kubrick,
+            Maintainer = test1
         };
 
         var fullMetalJacket = new Film
@@ -280,7 +289,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.Action,
             ReleaseDate = new DateTime(1987, 6, 26),
             Rating = 8.3,
-            Director = kubrick
+            Director = kubrick,
+            Maintainer = admin
         };
         
         // Lynch films
@@ -309,7 +319,8 @@ public static class DataSeeder
             Genre = Genre.Horror | Genre.Thriller | Genre.Drama,
             ReleaseDate = new DateTime(2019, 10, 18),
             Rating = 7.4,
-            Director = eggers
+            Director = eggers,
+            Maintainer = test1
         };
         
         var theNorthman = new Film
@@ -337,7 +348,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.Romance,
             ReleaseDate = new DateTime(1960, 3, 16),
             Rating = 7.8,
-            Director = godard
+            Director = godard,
+            Maintainer = test1
         };
 
         var vivreSaVie = new Film
@@ -365,7 +377,8 @@ public static class DataSeeder
             Genre = Genre.Action | Genre.SciFi | Genre.Thriller,
             ReleaseDate = new DateTime(2010, 7, 16),
             Rating = 7.8,
-            Director = nolan
+            Director = nolan,
+            Maintainer = test1
         };
 
         var theDarkKnight = new Film
@@ -402,7 +415,8 @@ public static class DataSeeder
             Genre = Genre.SciFi | Genre.Thriller,
             ReleaseDate = new DateTime(2017, 10, 6),
             Rating = 8.0,
-            Director = villeneuve
+            Director = villeneuve,
+            Maintainer = admin
         };
 
         var arrival = new Film
@@ -449,7 +463,8 @@ public static class DataSeeder
             Genre = Genre.Action | Genre.Thriller,
             ReleaseDate = new DateTime(2003, 10, 10),
             Rating = 8.2,
-            Director = tarantino
+            Director = tarantino,
+            Maintainer = test1
         };
 
         context.Films.AddRange(

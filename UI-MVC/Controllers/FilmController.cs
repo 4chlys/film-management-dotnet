@@ -29,7 +29,7 @@ public class FilmController(IManager manager) : Controller
         return View(new NewFilmViewModel());
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "IsAdmin")]
     [HttpPost]
     public IActionResult Create(NewFilmViewModel model)
     {
@@ -90,6 +90,7 @@ public class FilmController(IManager manager) : Controller
     public IActionResult Edit(Guid id)
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
+        
         if (film == null)
         {
             return View("Error", new ErrorViewModel(
@@ -99,11 +100,15 @@ public class FilmController(IManager manager) : Controller
             ));
         }
 
+        var loggedInUser = User.Identity?.Name;
+        
+        if (film.Maintainer?.UserName != loggedInUser && !User.IsInRole("Admin")) return RedirectToPage("/Account/AccessDenied", new { Area = "Identity"});
+        
         var vm = MapToEditViewModel(film);
         PopulateSelectLists(vm.DirectorId);
         return View(vm);
     }
-
+    
     [HttpPost]
     public IActionResult Edit(Guid id, EditFilmViewModel vm)
     {
@@ -124,6 +129,11 @@ public class FilmController(IManager manager) : Controller
                     $"Cannot edit film with ID '{id}' because it does not exist."
                 ));
             }
+
+            var loggedInUser = User.Identity?.Name;
+        
+            if (film.Maintainer?.UserName != loggedInUser && !User.IsInRole("Admin")) return RedirectToPage("/Account/AccessDenied", new { Area = "Identity"});
+
 
             film.Title = vm.Title;
             film.Genre = vm.Genre;

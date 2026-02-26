@@ -82,6 +82,7 @@ Content-Type: application/json
 
 ### Update film
 PUT http://localhost:5199/api/films/{{newFilmId}}
+Cookie: .AspNet
 Accept: application/json
 Content-Type: application/json
 

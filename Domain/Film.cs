@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL.Domain.Validation;
+using Microsoft.AspNetCore.Identity;
 
 namespace FilmManagement.BL.Domain;
 
@@ -24,4 +25,6 @@ public class Film
     public Director Director { get; set; }
 
     public ICollection<ActorFilm> ActorFilms { get; init; } = [];
+    
+    public IdentityUser Maintainer { get; set; }
 }
