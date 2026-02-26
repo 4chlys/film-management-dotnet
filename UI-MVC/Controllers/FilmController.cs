@@ -3,11 +3,15 @@ using FilmManagement.BL;
 using FilmManagement.UI.Web.Controllers.Extensions;
 using FilmManagement.UI.Web.Models;
 using FilmManagement.UI.Web.Models.Film;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FilmManagement.UI.Web.Controllers;
 
+
+[Authorize]
+[AutoValidateAntiforgeryToken]
 public class FilmController(IManager manager) : Controller
 {
     [HttpGet]
@@ -17,6 +21,7 @@ public class FilmController(IManager manager) : Controller
         return View(films);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public IActionResult Create()
     {
@@ -24,6 +29,7 @@ public class FilmController(IManager manager) : Controller
         return View(new NewFilmViewModel());
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public IActionResult Create(NewFilmViewModel model)
     {

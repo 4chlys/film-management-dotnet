@@ -3,11 +3,15 @@ using AspNetCoreLiveMonitoring.Extensions;
 using FilmManagement.BL;
 using FilmManagement.DAL;
 using FilmManagement.DAL.EF;
+using FilmManagement.UI.Web.Areas.Identity.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("FilmDbContextConnection") ?? throw new InvalidOperationException("Connection string 'FilmDbContextConnection' not found.");;
 
-builder.Services.AddDbContext<FilmDbContext>(optionsBuilder => optionsBuilder.UseSqlite("Data Source=filmmanagementdb.sqlite"));
+builder.Services.AddDbContext<FilmDbContext>(optionsBuilder => optionsBuilder.UseSqlite(connectionString));
 builder.Services.AddScoped<IRepository, EfRepository>();
 builder.Services.AddScoped<IManager, Manager>();
 builder.Services.AddLiveMonitoring();
@@ -15,6 +19,12 @@ builder.Services.AddLiveMonitoring();
 builder.Services.AddControllersWithViews()
     .AddXmlDataContractSerializerFormatters()
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
+
+builder.Services
+    .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<FilmDbContext>();
+
 
 var app = builder.Build();
 
@@ -26,8 +36,10 @@ using (var scope = app.Services.CreateScope())
     {
         DataSeeder.Seed(ctx);
     }
+    
+    var userManager = scope.ServiceProvider.GetService<UserManager<IdentityUser>>();
+    var roleManager = scope.ServiceProvider.GetService<RoleManager<IdentityRole>>();
 }
-
 
 if (!app.Environment.IsDevelopment())
 {

@@ -1,9 +1,12 @@
 using FilmManagement.BL;
 using FilmManagement.UI.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FilmManagement.UI.Web.Controllers;
 
+[Authorize]
+[AutoValidateAntiforgeryToken]
 public class ActorController(IManager manager) : Controller
 {
     [HttpGet]

@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using FilmManagement.BL.Domain;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace FilmManagement.DAL.EF;
 
-public class FilmDbContext(DbContextOptions options) : DbContext(options)
+public class FilmDbContext(DbContextOptions options) : IdentityDbContext(options)
 {
     public DbSet<Film> Films { get; set; }
     public DbSet<Actor> Actors { get; set; }
