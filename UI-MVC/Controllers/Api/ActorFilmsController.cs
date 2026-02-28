@@ -1,4 +1,5 @@
 using FilmManagement.BL;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.UI.Web.Models.Dto.ActorFilm;
@@ -9,13 +10,14 @@ namespace FilmManagement.UI.Web.Controllers.Api;
 [Route("api/[controller]")]
 public class ActorFilmsController(IManager manager) : ControllerBase
 {
+    [Authorize]
     [HttpPost]
     public ActionResult Create(NewActorFilmDto dto)
     {
         try
         {
             manager.AddActorToFilm(dto.FilmId, dto.ActorId, dto.ScreenTime);
-            
+
             return CreatedAtAction(
                 nameof(Get),
                 new { filmId = dto.FilmId, actorId = dto.ActorId },
@@ -64,6 +66,7 @@ public class ActorFilmsController(IManager manager) : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPut("{filmId:guid}/{actorId:guid}")]
     public IActionResult UpdateScreenTime(Guid filmId, Guid actorId, [FromBody] int? screenTime)
     {
@@ -82,6 +85,7 @@ public class ActorFilmsController(IManager manager) : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpDelete("{filmId:guid}/{actorId:guid}")]
     public IActionResult Delete(Guid filmId, Guid actorId)
     {

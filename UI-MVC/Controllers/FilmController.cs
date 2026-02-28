@@ -4,34 +4,33 @@ using FilmManagement.UI.Web.Controllers.Extensions;
 using FilmManagement.UI.Web.Models;
 using FilmManagement.UI.Web.Models.Film;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FilmManagement.UI.Web.Controllers;
 
-
 [Authorize]
 [AutoValidateAntiforgeryToken]
-public class FilmController(IManager manager) : Controller
+public class FilmController(IManager manager, UserManager<IdentityUser> userManager) : Controller
 {
+    [AllowAnonymous]
     [HttpGet]
     public IActionResult Index()
     {
         var films = manager.GetAllFilmsWithDirectors();
         return View(films);
     }
-
-    [Authorize(Roles = "Admin")]
+    
     [HttpGet]
     public IActionResult Create()
     {
         PopulateSelectLists();
         return View(new NewFilmViewModel());
     }
-
-    [Authorize(Policy = "IsAdmin")]
+    
     [HttpPost]
-    public IActionResult Create(NewFilmViewModel model)
+    public async Task<IActionResult> Create(NewFilmViewModel model)
     {
         if (!ModelState.IsValid)
         {
@@ -41,6 +40,8 @@ public class FilmController(IManager manager) : Controller
 
         try
         {
+            var currentUser = await userManager.GetUserAsync(User);
+
             var film = manager.AddFilmWithActors(
                 model.Title,
                 model.Genre,
@@ -48,7 +49,7 @@ public class FilmController(IManager manager) : Controller
                 model.Rating,
                 model.DirectorId,
                 model.SelectedActorIds ?? new List<Guid>(),
-                User
+                currentUser
             );
             return RedirectToAction(nameof(Details), new { id = film.ImdbId });
         }
@@ -66,6 +67,7 @@ public class FilmController(IManager manager) : Controller
         }
     }
     
+    [AllowAnonymous]
     [HttpGet]
     public IActionResult Details(Guid id)
     {
@@ -88,7 +90,7 @@ public class FilmController(IManager manager) : Controller
     }
 
     [HttpGet]
-    public IActionResult Edit(Guid id)
+    public async Task<IActionResult> Edit(Guid id)
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
         
@@ -101,17 +103,18 @@ public class FilmController(IManager manager) : Controller
             ));
         }
 
-        var loggedInUser = User.Identity?.Name;
-        
-        if (film.Maintainer?.UserName != loggedInUser && !User.IsInRole("Admin")) return RedirectToPage("/Account/AccessDenied", new { Area = "Identity"});
-        
+        var currentUser = await userManager.GetUserAsync(User);
+    
+        if (film.Maintainer?.Id != currentUser?.Id && !User.IsInRole("Admin"))
+            return RedirectToPage("/Account/AccessDenied", new { Area = "Identity" });
+
         var vm = MapToEditViewModel(film);
         PopulateSelectLists(vm.DirectorId);
         return View(vm);
     }
     
     [HttpPost]
-    public IActionResult Edit(Guid id, EditFilmViewModel vm)
+    public async Task<IActionResult> Edit(Guid id, EditFilmViewModel vm)
     {
         if (!ModelState.IsValid)
         {
@@ -125,16 +128,15 @@ public class FilmController(IManager manager) : Controller
             if (film == null)
             {
                 return View("Error", new ErrorViewModel(
-                    404,
-                    "Film Not Found",
+                    404, "Film Not Found",
                     $"Cannot edit film with ID '{id}' because it does not exist."
                 ));
             }
 
-            var loggedInUser = User.Identity?.Name;
-        
-            if (film.Maintainer?.UserName != loggedInUser && !User.IsInRole("Admin")) return RedirectToPage("/Account/AccessDenied", new { Area = "Identity"});
+            var currentUser = await userManager.GetUserAsync(User);
 
+            if (film.Maintainer?.Id != currentUser?.Id && !User.IsInRole("Admin"))
+                return RedirectToPage("/Account/AccessDenied", new { Area = "Identity" });
 
             film.Title = vm.Title;
             film.Genre = vm.Genre;

@@ -1,6 +1,7 @@
 using FilmManagement.BL;
 using FilmManagement.UI.Web.Models.Dto.Director;
 using FilmManagement.UI.Web.Models.Dto.Film;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FilmManagement.UI.Web.Controllers.Api;
@@ -14,19 +15,16 @@ public class DirectorsController(IManager manager) : ControllerBase
     {
         var directors = manager.GetAllDirectors();
         if (!directors.Any())
-        {
             return NoContent();
-        }
 
-        return Ok(
-            directors.Select(d => new DirectorDto
-            {
-                ImdbId = d.ImdbId,
-                Name = d.Name,
-                Country = d.Country,
-                CareerStart = d.CareerStart,
-                CareerEnd = d.CareerEnd
-            }));
+        return Ok(directors.Select(d => new DirectorDto
+        {
+            ImdbId = d.ImdbId,
+            Name = d.Name,
+            Country = d.Country,
+            CareerStart = d.CareerStart,
+            CareerEnd = d.CareerEnd
+        }));
     }
 
     [HttpGet("{directorId}")]
@@ -34,9 +32,7 @@ public class DirectorsController(IManager manager) : ControllerBase
     {
         var director = manager.GetDirector(directorId);
         if (director == null)
-        {
             return NotFound();
-        }
 
         return Ok(new DirectorDto
         {
@@ -48,6 +44,7 @@ public class DirectorsController(IManager manager) : ControllerBase
         });
     }
 
+    [Authorize]
     [HttpPost]
     public ActionResult<DirectorDto> Create(NewDirectorDto directorDto)
     {
@@ -65,32 +62,24 @@ public class DirectorsController(IManager manager) : ControllerBase
             CareerStart = createdDirector.CareerStart,
             CareerEnd = createdDirector.CareerEnd
         };
-        return CreatedAtAction(
-            nameof(Get),
-            new { directorId = createdDirector.ImdbId },
-            dto
-        );
+        return CreatedAtAction(nameof(Get), new { directorId = createdDirector.ImdbId }, dto);
     }
 
     [HttpGet("{directorId}/films")]
     public ActionResult<IEnumerable<FilmDto>> GetFilmsByDirector(Guid directorId)
     {
-        var films = manager.GetDirectorWithFilms(directorId)
-            .Films;
-        if (!films.Any())
-        {
+        var films = manager.GetDirectorWithFilms(directorId)?.Films;
+        if (films == null || !films.Any())
             return NoContent();
-        }
 
-        return Ok(
-            films.Select(f => new FilmDto
-            {
-                ImdbId = f.ImdbId,
-                Title = f.Title,
-                Genre = f.Genre.ToString(),
-                ReleaseDate = f.ReleaseDate,
-                Rating = f.Rating,
-                DirectorName = f.Director?.Name
-            }));
+        return Ok(films.Select(f => new FilmDto
+        {
+            ImdbId = f.ImdbId,
+            Title = f.Title,
+            Genre = f.Genre.ToString(),
+            ReleaseDate = f.ReleaseDate,
+            Rating = f.Rating,
+            DirectorName = f.Director?.Name
+        }));
     }
 }

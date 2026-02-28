@@ -1,5 +1,7 @@
 using FilmManagement.BL;
 using FilmManagement.BL.Domain;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.UI.Web.Models.Dto.Actor;
@@ -9,21 +11,17 @@ namespace FilmManagement.UI.Web.Controllers.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-public class FilmsController(IManager manager) : ControllerBase
+public class FilmsController(IManager manager, UserManager<IdentityUser> userManager) : ControllerBase
 {
     [HttpGet]
     public ActionResult<IEnumerable<FilmDto>> GetAll([FromQuery] Genre? genre = null)
     {
         IEnumerable<Film> films;
-        
+
         if (genre.HasValue)
-        {
             films = manager.GetFilmsByGenre(genre.Value);
-        }
         else
-        {
             films = manager.GetAllFilmsWithDirectors();
-        }
 
         if (!films.Any())
             return NoContent();
@@ -57,6 +55,7 @@ public class FilmsController(IManager manager) : ControllerBase
         });
     }
 
+    [Authorize]
     [HttpPost]
     public ActionResult<FilmDto> Create(NewFilmDto dto)
     {
@@ -75,7 +74,8 @@ public class FilmsController(IManager manager) : ControllerBase
                 dto.Genre,
                 dto.ReleaseDate,
                 dto.Rating,
-                director
+                director,
+                null
             );
 
             return CreatedAtAction(
@@ -98,14 +98,21 @@ public class FilmsController(IManager manager) : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPut("{filmId:guid}")]
-    public IActionResult Update(Guid filmId, UpdateFilmDto dto)
+    public async Task<IActionResult> Update(Guid filmId, UpdateFilmDto dto)
     {
         try
         {
             var film = manager.GetFilm(filmId);
             if (film == null)
                 return NotFound(new { error = "Film not found" });
+
+            var currentUser = await userManager.GetUserAsync(User);
+            var isAdmin = User.IsInRole("Admin");
+
+            if (film.Maintainer?.Id != currentUser?.Id && !isAdmin)
+                return StatusCode(403, new { error = "You are not authorized to edit this film." });
 
             Director director = null;
             if (dto.DirectorId.HasValue)
@@ -129,7 +136,38 @@ public class FilmsController(IManager manager) : ControllerBase
             return BadRequest(new { error = ex.Message });
         }
     }
+    
+    [Authorize]
+    [HttpPut("{filmId:guid}/rating")]
+    public async Task<IActionResult> UpdateRating(Guid filmId, [FromBody] double rating)
+    {
+        if (rating < 0 || rating > 10)
+            return BadRequest(new { error = "Rating must be between 0 and 10." });
 
+        var film = manager.GetFilm(filmId);
+        if (film == null)
+            return NotFound(new { error = "Film not found" });
+
+        var currentUser = await userManager.GetUserAsync(User);
+        var isAdmin = User.IsInRole("Admin");
+
+        if (film.Maintainer?.Id != currentUser?.Id && !isAdmin)
+            return StatusCode(403, new { error = "You are not the maintainer of this film." });
+
+        film.Rating = rating;
+
+        try
+        {
+            manager.ChangeFilm(film);
+            return Ok(new { rating = film.Rating });
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [Authorize]
     [HttpDelete("{filmId:guid}")]
     public IActionResult Delete(Guid filmId)
     {

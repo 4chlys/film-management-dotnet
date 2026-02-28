@@ -1,4 +1,5 @@
 @model IEnumerable<Film>
+@inject Microsoft.AspNetCore.Identity.SignInManager<Microsoft.AspNetCore.Identity.IdentityUser> SignInManager
 
 @{
     ViewBag.Title = "Films";
@@ -6,9 +7,12 @@
 
 <h2>All Films</h2>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Add Film</a>
-</p>
+@if (User.IsInRole("Admin"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-primary">Add Film</a>
+    </p>
+}
 
 <table class="table table-striped">
     <thead>
@@ -31,9 +35,15 @@
             <td>@film.Rating.ToString("F1")</td>
             <td>@(film.Director?.Name ?? "unknown")</td>
             <td>
-                <a asp-action="Details" asp-route-id="@film.ImdbId">Details</a>
-                <a asp-action="Edit" asp-route-id="@film.ImdbId" class="btn btn-sm btn-warning mx-1">Edit</a>
-                <a asp-action="Delete" asp-route-id="@film.ImdbId" class="btn btn-sm btn-danger mx-1">Delete</a>
+                <a asp-action="Details" asp-route-id="@film.ImdbId" class="btn btn-sm btn-info">Details</a>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <a asp-action="Edit" asp-route-id="@film.ImdbId" class="btn btn-sm btn-warning mx-1">Edit</a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Delete" asp-route-id="@film.ImdbId" class="btn btn-sm btn-danger mx-1">Delete</a>
+                    }
+                }
             </td>
         </tr>
     }

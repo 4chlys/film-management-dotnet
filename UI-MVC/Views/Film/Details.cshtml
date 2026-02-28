@@ -1,7 +1,12 @@
 @model FilmManagement.UI.Web.Models.Film.DetailsFilmViewModel
+@inject Microsoft.AspNetCore.Identity.SignInManager<Microsoft.AspNetCore.Identity.IdentityUser> SignInManager
+@inject Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> UserManager
 
 @{
     ViewBag.Title = "Film Details";
+    var currentUserName = UserManager.GetUserName(User);
+    var isMaintainer = Model.MaintainerName != null && Model.MaintainerName == currentUserName;
+    var canEditOrDelete = isMaintainer || User.IsInRole("Admin");
 }
 
 <h2>Film Details</h2>
@@ -13,10 +18,13 @@
     </div>
 }
 
-<partial name="_FilmDetailsPartial" model="Model" />
+<partial name="_FilmDetailsPartial" model="Model"/>
 
 <div class="mt-3">
-    <a asp-action="Edit" asp-route-id="@Model.ImdbId" class="btn btn-primary">Edit</a>
-    <a asp-action="Delete" asp-route-id="@Model.ImdbId" class="btn btn-danger">Delete</a>
+    @if (SignInManager.IsSignedIn(User) && canEditOrDelete)
+    {
+        <a asp-action="Edit" asp-route-id="@Model.ImdbId" class="btn btn-primary">Edit</a>
+        <a asp-action="Delete" asp-route-id="@Model.ImdbId" class="btn btn-danger">Delete</a>
+    }
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

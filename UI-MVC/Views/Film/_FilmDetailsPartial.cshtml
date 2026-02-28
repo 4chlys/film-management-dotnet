@@ -1,20 +1,59 @@
 @model FilmManagement.UI.Web.Models.Film.DetailsFilmViewModel
+@inject Microsoft.AspNetCore.Identity.UserManager<Microsoft.AspNetCore.Identity.IdentityUser> UserManager
+@inject Microsoft.AspNetCore.Identity.SignInManager<Microsoft.AspNetCore.Identity.IdentityUser> SignInManager
 
 <div class="card">
     <div class="card-body">
         <dl class="row">
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Title)</dt>
             <dd class="col-sm-9">@Model.Title</dd>
-            
+
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Genre)</dt>
             <dd class="col-sm-9">@Model.Genre</dd>
-            
+
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.ReleaseDate)</dt>
             <dd class="col-sm-9">@Model.ReleaseDate.ToString("dd/MM/yyyy")</dd>
-            
+
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Rating)</dt>
-            <dd class="col-sm-9">@Model.Rating.ToString("F1") / 10</dd>
-            
+            <dd class="col-sm-9">
+                @Model.Rating.ToString("F1") / 10
+                @{
+                    var currentUserName = UserManager.GetUserName(User);
+                    var isMaintainer = Model.MaintainerName != null && Model.MaintainerName == currentUserName;
+                    var isAdmin = User.IsInRole("Admin");
+                    var canEdit = isMaintainer || isAdmin;
+                }
+                @if (canEdit)
+                {
+                    <div class="mt-2" id="ratingUpdateForm">
+                        <div class="input-group" style="max-width: 250px;">
+                            <input type="number"
+                                   id="newRating"
+                                   class="form-control"
+                                   step="0.1"
+                                   min="0"
+                                   max="10"
+                                   value="@Model.Rating"
+                                   placeholder="New rating" />
+                            <button class="btn btn-primary" onclick="updateRating('@Model.ImdbId')">Update</button>
+                        </div>
+                        <small id="ratingMessage" class="form-text"></small>
+                    </div>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Maintained by</dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.MaintainerName))
+                {
+                    <span class="text-muted fst-italic">@Model.MaintainerName</span>
+                }
+                else
+                {
+                    <span class="text-muted">No maintainer assigned</span>
+                }
+            </dd>
+
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Director)</dt>
             <dd class="col-sm-9">
                 @if (Model.Director != null)
@@ -28,45 +67,53 @@
                     <span class="text-muted">Unknown</span>
                 }
             </dd>
+
             <dt class="col-sm-3">@Html.DisplayNameFor(m => m.Actors)</dt>
             <dd class="col-sm-9">
                 @if (Model.Actors != null && Model.Actors.Any())
                 {
                     <table class="table table-sm">
                         <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Date of Birth</th>
-                                <th>Screen Time</th>
-                                <th></th>
-                            </tr>
+                        <tr>
+                            <th>Name</th>
+                            <th>Date of Birth</th>
+                            <th>Screen Time</th>
+                            <th></th>
+                        </tr>
                         </thead>
                         <tbody>
-                            @foreach (var actor in Model.Actors)
-                            {
-                                <tr>
-                                    <td>@actor.Name</td>
-                                    <td>@actor.DateOfBirth.ToString("dd/MM/yyyy")</td>
-                                    <td>
+                        @foreach (var actor in Model.Actors)
+                        {
+                            <tr>
+                                <td>@actor.Name</td>
+                                <td>@actor.DateOfBirth.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (SignInManager.IsSignedIn(User))
+                                    {
                                         <form asp-controller="Film" asp-action="UpdateScreenTime" method="post" class="d-inline">
-                                            <input type="hidden" name="filmId" value="@Model.ImdbId" />
-                                            <input type="hidden" name="actorId" value="@actor.ImdbId" />
+                                            <input type="hidden" name="filmId" value="@Model.ImdbId"/>
+                                            <input type="hidden" name="actorId" value="@actor.ImdbId"/>
                                             <div class="input-group input-group-sm" style="width: 150px;">
-                                                <input type="number" 
-                                                       name="screenTime" 
-                                                       value="@actor.ScreenTime" 
-                                                       class="form-control" 
+                                                <input type="number"
+                                                       name="screenTime"
+                                                       value="@actor.ScreenTime"
+                                                       class="form-control"
                                                        placeholder="minutes"
-                                                       min="0" />
+                                                       min="0"/>
                                                 <button type="submit" class="btn btn-sm btn-primary">Update</button>
                                             </div>
                                         </form>
-                                    </td>
-                                    <td>
-                                        <a asp-controller="Actor" asp-action="Details" asp-route-id="@actor.ImdbId">Details</a>
-                                    </td>
-                                </tr>
-                            }
+                                    }
+                                    else
+                                    {
+                                        <span>@(actor.ScreenTime.HasValue ? $"{actor.ScreenTime} min" : "—")</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-controller="Actor" asp-action="Details" asp-route-id="@actor.ImdbId">Details</a>
+                                </td>
+                            </tr>
+                        }
                         </tbody>
                     </table>
                 }
@@ -78,3 +125,47 @@
         </dl>
     </div>
 </div>
+
+@if (canEdit)
+{
+    <script>
+    async function updateRating(filmId) {
+        const ratingInput = document.getElementById('newRating');
+        const messageEl = document.getElementById('ratingMessage');
+        const rating = parseFloat(ratingInput.value);
+
+        if (isNaN(rating) || rating < 0 || rating > 10) {
+            messageEl.textContent = 'Rating must be between 0 and 10.';
+            messageEl.className = 'form-text text-danger';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/films/${filmId}/rating`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(rating)
+            });
+
+            if (response.ok) {
+                messageEl.textContent = 'Rating updated successfully!';
+                messageEl.className = 'form-text text-success';
+                document.querySelector('.col-sm-9 .fw-bold, dd:nth-of-type(4)');
+            } else if (response.status === 401) {
+                messageEl.textContent = 'You must be logged in to update the rating.';
+                messageEl.className = 'form-text text-danger';
+            } else if (response.status === 403) {
+                messageEl.textContent = 'You are not authorized to update this film\'s rating.';
+                messageEl.className = 'form-text text-danger';
+            } else {
+                const err = await response.json();
+                messageEl.textContent = err.error || 'An error occurred.';
+                messageEl.className = 'form-text text-danger';
+            }
+        } catch (e) {
+            messageEl.textContent = 'Network error. Please try again.';
+            messageEl.className = 'form-text text-danger';
+        }
+    }
+    </script>
+}

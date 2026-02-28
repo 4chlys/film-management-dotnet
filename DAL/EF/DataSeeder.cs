@@ -13,35 +13,35 @@ public static class DataSeeder
         var test2 = context.Users.Single(u => u.UserName == "test2@test.tld");
         var test3 = context.Users.Single(u => u.UserName == "test3@test.tld");
         var test4 = context.Users.Single(u => u.UserName == "test4@test.tld");
-        
+
         // === DIRECTORS ===
-        var lanthimos = new Director 
-        { 
-            Name = "Yorgos Lanthimos", 
-            Country = "Greece", 
+        var lanthimos = new Director
+        {
+            Name = "Yorgos Lanthimos",
+            Country = "Greece",
             CareerStart = 2001
         };
-        
-        var kubrick = new Director 
-        { 
-            Name = "Stanley Kubrick", 
-            Country = "USA", 
+
+        var kubrick = new Director
+        {
+            Name = "Stanley Kubrick",
+            Country = "USA",
             CareerStart = 1951,
             CareerEnd = 1999
         };
-        
-        var lynch = new Director 
-        { 
-            Name = "David Lynch", 
-            Country = "USA", 
+
+        var lynch = new Director
+        {
+            Name = "David Lynch",
+            Country = "USA",
             CareerStart = 1970,
             CareerEnd = 2006
         };
-        
-        var eggers = new Director 
-        { 
-            Name = "Robert Eggers", 
-            Country = "USA", 
+
+        var eggers = new Director
+        {
+            Name = "Robert Eggers",
+            Country = "USA",
             CareerStart = 2015
         };
 
@@ -81,7 +81,7 @@ public static class DataSeeder
             CareerStart = 1992
         };
 
-        context.Directors.AddRange(lanthimos, kubrick, lynch, eggers, godard, 
+        context.Directors.AddRange(lanthimos, kubrick, lynch, eggers, godard,
             nolan, villeneuve, anderson, tarantino);
 
         // === ACTORS ===
@@ -91,42 +91,42 @@ public static class DataSeeder
             Nationality = "American",
             DateOfBirth = new DateTime(1988, 11, 6)
         };
-        
+
         var farrell = new Actor
         {
             Name = "Colin Farrell",
             Nationality = "Irish",
             DateOfBirth = new DateTime(1976, 5, 31),
         };
-        
+
         var kidman = new Actor
         {
             Name = "Nicole Kidman",
             Nationality = "Australian",
             DateOfBirth = new DateTime(1967, 6, 20),
         };
-        
+
         var pattinson = new Actor
         {
             Name = "Robert Pattinson",
             Nationality = "British",
             DateOfBirth = new DateTime(1986, 5, 13),
         };
-        
+
         var dafoe = new Actor
         {
             Name = "Willem Dafoe",
             Nationality = "American",
             DateOfBirth = new DateTime(1955, 7, 22),
         };
-        
+
         var keoghan = new Actor
         {
             Name = "Barry Keoghan",
             Nationality = "Irish",
             DateOfBirth = new DateTime(1992, 10, 18),
         };
-        
+
         var belmondo = new Actor
         {
             Name = "Jean-Paul Belmondo",
@@ -220,12 +220,12 @@ public static class DataSeeder
             DateOfBirth = new DateTime(1948, 12, 21)
         };
 
-        context.Actors.AddRange(stone, farrell, kidman, pattinson, dafoe, keoghan, 
-            belmondo, karina, weisz, hoult, leigh, dern, chalamet, zendaya, 
+        context.Actors.AddRange(stone, farrell, kidman, pattinson, dafoe, keoghan,
+            belmondo, karina, weisz, hoult, leigh, dern, chalamet, zendaya,
             fiennes, swinton, travolta, thurman, jackson);
 
         // === FILMS ===
-        
+
         // Lanthimos films
         var theLobster = new Film
         {
@@ -234,9 +234,9 @@ public static class DataSeeder
             ReleaseDate = new DateTime(2015, 10, 16),
             Rating = 8.2,
             Director = lanthimos,
-            Maintainer = admin
+            Maintainer = test2
         };
-        
+
         var poorThings = new Film
         {
             Title = "Poor Things",
@@ -253,7 +253,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.Thriller,
             ReleaseDate = new DateTime(2017, 10, 20),
             Rating = 8.0,
-            Director = lanthimos
+            Director = lanthimos,
+            Maintainer = test3
         };
 
         var theFavourite = new Film
@@ -265,7 +266,7 @@ public static class DataSeeder
             Director = lanthimos,
             Maintainer = admin
         };
-        
+
         // Kubrick films
         var theShining = new Film
         {
@@ -273,7 +274,8 @@ public static class DataSeeder
             Genre = Genre.Horror | Genre.Thriller,
             ReleaseDate = new DateTime(1980, 5, 23),
             Rating = 8.4,
-            Director = kubrick
+            Director = kubrick,
+            Maintainer = test4
         };
 
         var aClockworkOrange = new Film
@@ -295,7 +297,7 @@ public static class DataSeeder
             Director = kubrick,
             Maintainer = admin
         };
-        
+
         // Lynch films
         var mulhollandDrive = new Film
         {
@@ -303,7 +305,8 @@ public static class DataSeeder
             Genre = Genre.Thriller | Genre.Drama,
             ReleaseDate = new DateTime(2001, 10, 12),
             Rating = 7.9,
-            Director = lynch
+            Director = lynch,
+            Maintainer = test2
         };
 
         var blueVelvet = new Film
@@ -312,9 +315,10 @@ public static class DataSeeder
             Genre = Genre.Thriller | Genre.Drama,
             ReleaseDate = new DateTime(1986, 9, 19),
             Rating = 7.7,
-            Director = lynch
+            Director = lynch,
+            Maintainer = test3
         };
-        
+
         // Eggers films
         var theLighthouse = new Film
         {
@@ -325,14 +329,15 @@ public static class DataSeeder
             Director = eggers,
             Maintainer = test1
         };
-        
+
         var theNorthman = new Film
         {
             Title = "The Northman",
             Genre = Genre.Action | Genre.Drama,
             ReleaseDate = new DateTime(2022, 4, 22),
             Rating = 7.0,
-            Director = eggers
+            Director = eggers,
+            Maintainer = test4
         };
 
         var theWitch = new Film
@@ -341,9 +346,10 @@ public static class DataSeeder
             Genre = Genre.Horror | Genre.Drama,
             ReleaseDate = new DateTime(2015, 1, 27),
             Rating = 7.0,
-            Director = eggers
+            Director = eggers,
+            Maintainer = test2
         };
-        
+
         // Godard films
         var breathless = new Film
         {
@@ -361,7 +367,8 @@ public static class DataSeeder
             Genre = Genre.Drama,
             ReleaseDate = new DateTime(1962, 9, 20),
             Rating = 8.0,
-            Director = godard
+            Director = godard,
+            Maintainer = test3
         };
 
         var pierrotLeFou = new Film
@@ -370,7 +377,8 @@ public static class DataSeeder
             Genre = Genre.Drama | Genre.Romance,
             ReleaseDate = new DateTime(1965, 11, 5),
             Rating = 7.5,
-            Director = godard
+            Director = godard,
+            Maintainer = test4
         };
 
         // Nolan films
@@ -390,7 +398,8 @@ public static class DataSeeder
             Genre = Genre.Action | Genre.Drama,
             ReleaseDate = new DateTime(2008, 7, 18),
             Rating = 8.5,
-            Director = nolan
+            Director = nolan,
+            Maintainer = admin
         };
 
         var interstellar = new Film
@@ -399,7 +408,8 @@ public static class DataSeeder
             Genre = Genre.SciFi | Genre.Drama,
             ReleaseDate = new DateTime(2014, 11, 7),
             Rating = 7.7,
-            Director = nolan
+            Director = nolan,
+            Maintainer = test2
         };
 
         // Villeneuve films
@@ -409,7 +419,8 @@ public static class DataSeeder
             Genre = Genre.SciFi | Genre.Drama | Genre.Action,
             ReleaseDate = new DateTime(2021, 10, 22),
             Rating = 8.0,
-            Director = villeneuve
+            Director = villeneuve,
+            Maintainer = test3
         };
 
         var bladeRunner2049 = new Film
@@ -428,7 +439,8 @@ public static class DataSeeder
             Genre = Genre.SciFi | Genre.Drama,
             ReleaseDate = new DateTime(2016, 11, 11),
             Rating = 7.9,
-            Director = villeneuve
+            Director = villeneuve,
+            Maintainer = test4
         };
 
         // Wes Anderson films
@@ -438,7 +450,8 @@ public static class DataSeeder
             Genre = Genre.Comedy | Genre.Drama,
             ReleaseDate = new DateTime(2014, 3, 28),
             Rating = 8.1,
-            Director = anderson
+            Director = anderson,
+            Maintainer = test2
         };
 
         var theRoyalTenenbaums = new Film
@@ -447,7 +460,8 @@ public static class DataSeeder
             Genre = Genre.Comedy | Genre.Drama,
             ReleaseDate = new DateTime(2001, 12, 14),
             Rating = 7.6,
-            Director = anderson
+            Director = anderson,
+            Maintainer = test3
         };
 
         // Tarantino films
@@ -457,7 +471,8 @@ public static class DataSeeder
             Genre = Genre.Drama,
             ReleaseDate = new DateTime(1994, 10, 14),
             Rating = 8.9,
-            Director = tarantino
+            Director = tarantino,
+            Maintainer = admin
         };
 
         var killBill = new Film
@@ -483,7 +498,7 @@ public static class DataSeeder
         );
 
         // === ACTOR-FILM RELATIONSHIPS WITH SCREEN TIME ===
-        
+
         // Lanthimos films
         theLobster.ActorFilms.Add(new ActorFilm { Actor = farrell, Film = theLobster, ScreenTime = 95 });
         theLobster.ActorFilms.Add(new ActorFilm { Actor = weisz, Film = theLobster, ScreenTime = 60 });
@@ -521,7 +536,7 @@ public static class DataSeeder
 
         // Godard films
         breathless.ActorFilms.Add(new ActorFilm { Actor = belmondo, Film = breathless, ScreenTime = 80 });
-        
+
         vivreSaVie.ActorFilms.Add(new ActorFilm { Actor = karina, Film = vivreSaVie, ScreenTime = null });
 
         pierrotLeFou.ActorFilms.Add(new ActorFilm { Actor = belmondo, Film = pierrotLeFou, ScreenTime = 90 });
@@ -557,7 +572,7 @@ public static class DataSeeder
 
         killBill.ActorFilms.Add(new ActorFilm { Actor = thurman, Film = killBill, ScreenTime = 110 });
         killBill.ActorFilms.Add(new ActorFilm { Actor = dern, Film = killBill, ScreenTime = 25 });
-        
+
         context.SaveChanges();
         context.ChangeTracker.Clear();
     }

@@ -1,4 +1,5 @@
 using FilmManagement.BL;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.UI.Web.Models.Dto.Actor;
@@ -46,6 +47,7 @@ public class ActorsController(IManager manager) : ControllerBase
         });
     }
 
+    [Authorize]
     [HttpPost]
     public ActionResult<ActorDto> Create(NewActorDto dto)
     {
@@ -68,11 +70,7 @@ public class ActorsController(IManager manager) : ControllerBase
                 Age = actor.Age
             };
 
-            return CreatedAtAction(
-                nameof(Get),
-                new { actorId = actor.ImdbId },
-                actorDto
-            );
+            return CreatedAtAction(nameof(Get), new { actorId = actor.ImdbId }, actorDto);
         }
         catch (ValidationException ex)
         {
@@ -80,6 +78,7 @@ public class ActorsController(IManager manager) : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPut("{actorId:guid}")]
     public IActionResult Update(Guid actorId, UpdateActorDto dto)
     {
@@ -103,6 +102,7 @@ public class ActorsController(IManager manager) : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpDelete("{actorId:guid}")]
     public IActionResult Delete(Guid actorId)
     {
