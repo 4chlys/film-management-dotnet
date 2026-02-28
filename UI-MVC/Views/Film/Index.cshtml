@@ -36,13 +36,17 @@
             <td>@(film.Director?.Name ?? "unknown")</td>
             <td>
                 <a asp-action="Details" asp-route-id="@film.ImdbId" class="btn btn-sm btn-info">Details</a>
-                @if (SignInManager.IsSignedIn(User))
+                @{
+                    var canEdit = User.IsInRole("Admin") 
+                                  || film.Maintainer?.Id == ViewBag.CurrentUserId;
+                }
+                @if (canEdit)
                 {
                     <a asp-action="Edit" asp-route-id="@film.ImdbId" class="btn btn-sm btn-warning mx-1">Edit</a>
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a asp-action="Delete" asp-route-id="@film.ImdbId" class="btn btn-sm btn-danger mx-1">Delete</a>
-                    }
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Delete" asp-route-id="@film.ImdbId" class="btn btn-sm btn-danger mx-1">Delete</a>
                 }
             </td>
         </tr>

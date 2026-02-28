@@ -19,6 +19,7 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
     public IActionResult Index()
     {
         var films = manager.GetAllFilmsWithDirectors();
+        ViewBag.CurrentUserId = userManager.GetUserId(User);
         return View(films);
     }
     
@@ -234,6 +235,7 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
             Genre = film.Genre.ToDisplayString(),
             ReleaseDate = film.ReleaseDate,
             Rating = film.Rating,
+            MaintainerName = film.Maintainer?.UserName,
             Director = film.Director == null ? null : new DetailsFilmViewModel.DirectorInfo
             {
                 ImdbId = film.Director.ImdbId,
