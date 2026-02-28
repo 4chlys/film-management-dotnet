@@ -47,7 +47,8 @@ public class FilmController(IManager manager) : Controller
                 model.ReleaseDate,
                 model.Rating,
                 model.DirectorId,
-                model.SelectedActorIds ?? new List<Guid>()
+                model.SelectedActorIds ?? new List<Guid>(),
+                User
             );
             return RedirectToAction(nameof(Details), new { id = film.ImdbId });
         }

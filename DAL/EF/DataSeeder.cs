@@ -10,6 +10,9 @@ public static class DataSeeder
         // === USERS ===
         var admin = context.Users.Single(u => u.UserName == "admin@test.tld");
         var test1 = context.Users.Single(u => u.UserName == "test1@test.tld");
+        var test2 = context.Users.Single(u => u.UserName == "test2@test.tld");
+        var test3 = context.Users.Single(u => u.UserName == "test3@test.tld");
+        var test4 = context.Users.Single(u => u.UserName == "test4@test.tld");
         
         // === DIRECTORS ===
         var lanthimos = new Director 

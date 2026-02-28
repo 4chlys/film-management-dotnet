@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL.Domain;
 using FilmManagement.BL.Domain.Validation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FilmManagement.UI.Web.Models.Film;

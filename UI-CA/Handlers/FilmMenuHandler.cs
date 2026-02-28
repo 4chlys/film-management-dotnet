@@ -95,7 +95,7 @@ public class FilmMenuHandler(IManager manager)
                     continue;
                 }
 
-                manager.AddFilm(title, genres, releaseDate, rating, director);
+                manager.AddFilm(title, genres, releaseDate, rating, director, null);
                 ValidationHelper.ShowSuccessMessage("Film added successfully!");
                 success = true;
             }

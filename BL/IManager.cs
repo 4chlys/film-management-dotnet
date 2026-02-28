@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using FilmManagement.BL.Domain;
 using FilmManagement.DAL;
+using Microsoft.AspNetCore.Identity;
 
 namespace FilmManagement.BL;
 
 public interface IManager
 {
-    Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director);
+    Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director, IdentityUser maintainer);
     Film GetFilm(Guid imdbId); 
     Film GetFilmWithDirector(Guid imdbId);
     Film GetFilmWithActorsAndDirectors(Guid imdbId);
@@ -18,7 +19,7 @@ public interface IManager
     void RemoveFilm(Film film);
     
     Film AddFilmWithActors(string title, Genre genre, DateTime releaseDate, double rating, 
-        Guid? directorId, List<Guid> actorIds);
+        Guid? directorId, List<Guid> actorIds, IdentityUser maintainer);
     void ChangeFilmWithActors(Film film, Guid? directorId, List<Guid> actorIds);
     void AddActorToFilm(Guid filmId, Guid actorId, int? screenTime);
     void RemoveActorFromFilm(Guid filmId, Guid actorId);

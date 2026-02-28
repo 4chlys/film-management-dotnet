@@ -3,13 +3,14 @@ using System.Linq.Expressions;
 using FilmManagement.BL.Domain;
 using FilmManagement.BL.Domain.Validation;
 using FilmManagement.DAL;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace FilmManagement.BL;
 
 public class Manager(IRepository repository) : IManager
 {
-    public Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director)
+    public Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director, IdentityUser maintainer)
     {
         var filmToCreate = new Film
         {
@@ -17,7 +18,8 @@ public class Manager(IRepository repository) : IManager
             Genre = genre,
             ReleaseDate = releaseDate,
             Rating = rating,
-            Director = director
+            Director = director,
+            Maintainer = maintainer
         };
 
         EntityValidator.ValidateEntity(filmToCreate);
@@ -83,7 +85,7 @@ public class Manager(IRepository repository) : IManager
     }
 
     public Film AddFilmWithActors(string title, Genre genre, DateTime releaseDate, double rating,
-        Guid? directorId, List<Guid> actorIds)
+        Guid? directorId, List<Guid> actorIds, IdentityUser maintainer)
     {
         Director director = null;
         if (directorId.HasValue)
@@ -105,7 +107,7 @@ public class Manager(IRepository repository) : IManager
             }
         }
 
-        var filmToCreate = AddFilm(title, genre, releaseDate, rating, director);
+        var filmToCreate = AddFilm(title, genre, releaseDate, rating, director, maintainer);
 
         foreach (var actor in actorsToAdd)
         {

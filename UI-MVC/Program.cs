@@ -8,7 +8,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 var connectionString = builder.Configuration.GetConnectionString("FilmDbContextConnection") ?? throw new InvalidOperationException("Connection string 'FilmDbContextConnection' not found.");;
 
 builder.Services.AddDbContext<FilmDbContext>(optionsBuilder => optionsBuilder.UseSqlite(connectionString));
@@ -21,7 +25,7 @@ builder.Services.AddControllersWithViews()
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 
 builder.Services
-    .AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddDefaultIdentity<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<FilmDbContext>();
 
