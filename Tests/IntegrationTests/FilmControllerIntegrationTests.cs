@@ -8,24 +8,29 @@ namespace FilmManagement.UI.MVC.Tests.IntegrationTests;
 public class FilmControllerIntegrationTests(ExtendedWebApplicationFactory<Program> factory)
     : IClassFixture<ExtendedWebApplicationFactory<Program>>
 {
+    #region Index
+
     [Fact]
-    public void Index_ShowsAllFilms_AsAnonymousUser()
+    public async Task Index_ShowsAllFilms_AsAnonymousUser()
     {
         // Arrange
         var client = factory.CreateClient();
-        var url = "/Film/Index";
 
         // Act
-        var response = client.GetAsync(url).Result;
-        var body = response.Content.ReadAsStringAsync().Result;
+        var response = await client.GetAsync("/Film/Index");
+        var body = await response.Content.ReadAsStringAsync();
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("<title>Films", body);
     }
 
+    #endregion
+
+    #region Create POST
+
     [Fact]
-    public void Create_Post_AsNotLoggedInUser_ReturnsRedirectToLogin()
+    public async Task Create_Post_AsNotLoggedInUser_ReturnsRedirectToLogin()
     {
         // Arrange
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -33,10 +38,8 @@ public class FilmControllerIntegrationTests(ExtendedWebApplicationFactory<Progra
             AllowAutoRedirect = false
         });
 
-        var url = "/Film/Create";
-
         // Act
-        var response = client.PostAsync(url, null).Result;
+        var response = await client.PostAsync("/Film/Create", null);
 
         // Assert
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
@@ -44,130 +47,122 @@ public class FilmControllerIntegrationTests(ExtendedWebApplicationFactory<Progra
     }
 
     [Fact]
-    public void Create_Post_AsRegularUser_ReturnsRedirectToAccessDenied_FilmNotStored()
+    public async Task Create_Post_AsRegularUser_ReturnsRedirectToAccessDenied_FilmNotStored()
     {
-        // Arrange — test1 has "User" role, not "Admin"
+        // Arrange
         var client = factory.CreateAuthenticatedClient(
             "test1@test.tld", "Test1@123$",
             options: new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
-        var url = "/Film/Create";
         string title = "Should Not Be Created";
 
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "Title", title },
-            { "SelectedGenres", "4" },
-            { "ReleaseDate", "2020-01-01" },
-            { "Rating", "7.5" }
+            { "Genre", "4" },
+            { "ReleaseDate", "01/01/2020" },
+            { "Rating", "8" }
         });
 
         // Act
-        var response = client.PostAsync(url, content).Result;
+        var response = await client.PostAsync("/Film/Create", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.StartsWith("/Identity/Account/AccessDenied", response.Headers.Location?.AbsolutePath);
 
-        // DB check — nothing was stored
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         var stored = scope.DbContext.Films.SingleOrDefault(f => f.Title == title);
         Assert.Null(stored);
     }
 
     [Fact]
-    public void Create_AsAdmin_ReturnsBadRequest_GivenInvalidCsrf()
+    public async Task Create_AsAdmin_ReturnsBadRequest_GivenInvalidCsrf()
     {
         // Arrange
         var client = factory.CreateAuthenticatedClient(
             "admin@test.tld", "Admin@123$",
             options: new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-
-        var url = "/Film/Create";
 
         var data = new Dictionary<string, string>
         {
             { "Title", "Some Film" },
-            { "SelectedGenres", "4" },
-            { "ReleaseDate", "2020-01-01" },
-            { "Rating", "7.5" },
+            { "Genre", "4" },
+            { "ReleaseDate", "01/01/2020" },
+            { "Rating", "8" },
             { "__RequestVerificationToken", "INVALID_CSRF_TOKEN" }
         };
 
         // Act
-        var response = client.PostAsync(url, new FormUrlEncodedContent(data)).Result;
+        var response = await client.PostAsync("/Film/Create", new FormUrlEncodedContent(data));
 
-        // Assert — [AutoValidateAntiforgeryToken] rejects an invalid token with 400
+        // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public void Create_Post_AsAdmin_FilmNotStored_ShowsFormWithErrors_GivenInvalidData_WithValidCsrf()
+    public async Task Create_Post_AsAdmin_FilmNotStored_ShowsFormWithErrors_GivenInvalidData_WithValidCsrf()
     {
         // Arrange
         var client = factory.CreateAuthenticatedClient(
             "admin@test.tld", "Admin@123$",
             options: new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
-        var url = "/Film/Create";
-
-        var csrfToken = client.GetCsrfToken(url);
+        var csrfToken = client.GetCsrfToken("/Film/Create");
 
         var data = new Dictionary<string, string>
         {
-            { "Title", "" },              // invalid: [Required] + MinimumLength = 3
-            { "SelectedGenres", "4" },
-            { "ReleaseDate", "2020-01-01" },
-            { "Rating", "7.5" },
+            { "Title", "" },
+            { "Genre", "4" },
+            { "ReleaseDate", "01/01/2020" },
+            { "Rating", "8" },
             { "__RequestVerificationToken", csrfToken }
         };
 
         // Act
-        var response = client.PostAsync(url, new FormUrlEncodedContent(data)).Result;
-        var body = response.Content.ReadAsStringAsync().Result;
+        var response = await client.PostAsync("/Film/Create", new FormUrlEncodedContent(data));
+        var body = await response.Content.ReadAsStringAsync();
 
-        // Assert — form is re-shown with a validation error
+        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("field is required", body);
 
-        // DB check — nothing stored
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         var stored = scope.DbContext.Films.SingleOrDefault(f => f.Title == "");
         Assert.Null(stored);
     }
 
     [Fact]
-    public void Create_Post_AsAdmin_StoresFilm_RedirectsToDetails_GivenValidData_WithValidCsrf()
+    public async Task Create_Post_AsAdmin_StoresFilm_RedirectsToDetails_GivenValidData_WithValidCsrf()
     {
         // Arrange
         var client = factory.CreateAuthenticatedClient(
             "admin@test.tld", "Admin@123$",
             options: new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
-        var url = "/Film/Create";
-
-        var csrfToken = client.GetCsrfToken(url);
+        var csrfToken = client.GetCsrfToken("/Film/Create");
 
         string title = "NEW from TEST";
         var data = new Dictionary<string, string>
         {
             { "Title", title },
-            { "SelectedGenres", "4" },   // Drama = 4
+            { "Genre", "4" },
             { "ReleaseDate", "2020-01-01" },
-            { "Rating", "7.5" },
+            { "Rating", "8" },
             { "__RequestVerificationToken", csrfToken }
         };
 
         // Act
-        var response = client.PostAsync(url, new FormUrlEncodedContent(data)).Result;
+        var response = await client.PostAsync("/Film/Create", new FormUrlEncodedContent(data));
 
-        // Assert — successful create redirects to Details
+        // Assert
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Matches(@"^.*/Film/Details", response.Headers.Location?.OriginalString);
 
-        // DB check — film was persisted
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         var stored = scope.DbContext.Films.SingleOrDefault(f => f.Title == title);
         Assert.NotNull(stored);
     }
+
+    #endregion
 }

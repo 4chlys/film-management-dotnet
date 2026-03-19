@@ -1,7 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
 using FilmManagement.DAL.EF;
 using FilmManagement.UI.MVC.Tests.IntegrationTests.Config;
 using FilmManagement.UI.Web.Models.Dto.Film;
@@ -11,9 +9,6 @@ namespace FilmManagement.UI.MVC.Tests.IntegrationTests;
 public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> factory)
     : IClassFixture<ExtendedWebApplicationFactory<Program>>
 {
-    private static StringContent JsonBody(double value) =>
-        new(JsonSerializer.Serialize(value), Encoding.UTF8, "application/json");
-
     private Guid GetFilmMaintainedBy(string maintainerEmail)
     {
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
@@ -23,36 +18,38 @@ public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> fact
         return film.ImdbId;
     }
 
+    #region UpdateRating
+
     [Fact]
-    public void UpdateRating_AsNotLoggedInUser_Returns401Unauthorized()
+    public async Task UpdateRating_AsNotLoggedInUser_Returns401Unauthorized()
     {
         // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateClient();
 
         // Act
-        var response = client.PutAsync($"/api/films/{filmId}/rating", JsonBody(8.0)).Result;
+        var response = await client.PutAsJsonAsync($"/api/films/{filmId}/rating", 8.0);
 
-        // Assert — API must not redirect to login; must return 401 directly
+        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public void UpdateRating_AsNonMaintainerNonAdmin_Returns403Forbidden()
+    public async Task UpdateRating_AsNonMaintainerNonAdmin_Returns403Forbidden()
     {
-        // Arrange — film belongs to test1, we log in as test2
+        // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateAuthenticatedClient("test2@test.tld", "Test2@123$");
 
         // Act
-        var response = client.PutAsync($"/api/films/{filmId}/rating", JsonBody(8.0)).Result;
+        var response = await client.PutAsJsonAsync($"/api/films/{filmId}/rating", 8.0);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
-    public void UpdateRating_AsMaintainer_Returns200Ok_RatingIsUpdated()
+    public async Task UpdateRating_AsMaintainer_Returns200Ok_RatingIsUpdated()
     {
         // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
@@ -60,12 +57,11 @@ public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> fact
         double newRating = 9.5;
 
         // Act
-        var response = client.PutAsync($"/api/films/{filmId}/rating", JsonBody(newRating)).Result;
+        var response = await client.PutAsJsonAsync($"/api/films/{filmId}/rating", newRating);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        // DB check — rating was persisted
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         scope.DbContext.ChangeTracker.Clear();
         var updated = scope.DbContext.Films.Single(f => f.ImdbId == filmId);
@@ -73,104 +69,109 @@ public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> fact
     }
 
     [Fact]
-    public void UpdateRating_AsAdmin_Returns200Ok_EvenWhenNotMaintainer()
+    public async Task UpdateRating_AsAdmin_Returns200Ok_EvenWhenNotMaintainer()
     {
-        // Arrange — admin is NOT the maintainer of test1's film
+        // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateAuthenticatedClient("admin@test.tld", "Admin@123$");
 
         // Act
-        var response = client.PutAsync($"/api/films/{filmId}/rating", JsonBody(6.0)).Result;
+        var response = await client.PutAsJsonAsync($"/api/films/{filmId}/rating", 6.0);
 
-        // Assert — admin role overrides the ownership check
+        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public void UpdateRating_Returns400BadRequest_GivenRatingAbove10()
+    public async Task UpdateRating_Returns400BadRequest_GivenRatingAbove10()
     {
         // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateAuthenticatedClient("test1@test.tld", "Test1@123$");
 
         // Act
-        var response = client.PutAsync($"/api/films/{filmId}/rating", JsonBody(11.0)).Result;
+        var response = await client.PutAsJsonAsync($"/api/films/{filmId}/rating", 11.0);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
-    public void UpdateRating_Returns404NotFound_GivenNonExistentFilmId()
+    public async Task UpdateRating_Returns404NotFound_GivenNonExistentFilmId()
     {
         // Arrange
         var client = factory.CreateAuthenticatedClient("admin@test.tld", "Admin@123$");
 
         // Act
-        var response = client.PutAsync($"/api/films/{Guid.NewGuid()}/rating", JsonBody(7.0)).Result;
+        var response = await client.PutAsJsonAsync($"/api/films/{Guid.NewGuid()}/rating", 7.0);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    #endregion
+
+    #region Delete
+
     [Fact]
-    public void Delete_AsNotLoggedInUser_Returns401Unauthorized()
+    public async Task Delete_AsNotLoggedInUser_Returns401Unauthorized()
     {
         // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateClient();
 
         // Act
-        var response = client.DeleteAsync($"/api/films/{filmId}").Result;
+        var response = await client.DeleteAsync($"/api/films/{filmId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public void Delete_AsNonMaintainerNonAdmin_Returns403Forbidden_FilmNotDeleted()
+    public async Task Delete_AsNonMaintainerNonAdmin_Returns403Forbidden_FilmNotDeleted()
     {
         // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateAuthenticatedClient("test2@test.tld", "Test2@123$");
 
         // Act
-        var response = client.DeleteAsync($"/api/films/{filmId}").Result;
+        var response = await client.DeleteAsync($"/api/films/{filmId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
 
-        // DB check — film must still exist
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         var film = scope.DbContext.Films.SingleOrDefault(f => f.ImdbId == filmId);
         Assert.NotNull(film);
     }
 
     [Fact]
-    public void Delete_AsMaintainer_Returns204NoContent_FilmIsRemoved()
+    public async Task Delete_AsMaintainer_Returns204NoContent_FilmIsRemoved()
     {
         // Arrange
         var filmId = GetFilmMaintainedBy("test1@test.tld");
         var client = factory.CreateAuthenticatedClient("test1@test.tld", "Test1@123$");
 
         // Act
-        var response = client.DeleteAsync($"/api/films/{filmId}").Result;
+        var response = await client.DeleteAsync($"/api/films/{filmId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        // DB check — film must be gone
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         var deleted = scope.DbContext.Films.SingleOrDefault(f => f.ImdbId == filmId);
         Assert.Null(deleted);
     }
 
+    #endregion
+
+    #region Create
+
     [Fact]
-    public void Create_AsAdmin_StoresFilm_Returns201Created_GivenValidData()
+    public async Task Create_AsAdmin_StoresFilm_Returns201Created_GivenValidData()
     {
         // Arrange
         var client = factory.CreateAuthenticatedClient("admin@test.tld", "Admin@123$");
-        var url = "/api/films";
         string title = "API Created from TEST";
 
         var dto = new NewFilmDto
@@ -182,13 +183,12 @@ public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> fact
         };
 
         // Act
-        var response = client.PostAsJsonAsync(url, dto).Result;
+        var response = await client.PostAsJsonAsync("/api/films", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        Assert.Matches(@"^.*/api/films/", response.Headers.Location?.OriginalString);
+        Assert.Matches(@"(?i)^.*/api/films/", response.Headers.Location?.OriginalString);
 
-        // DB check
         using var scope = factory.CreateDbContextScope<FilmDbContext>();
         var created = scope.DbContext.Films.SingleOrDefault(f => f.Title == title);
         Assert.NotNull(created);
@@ -196,7 +196,7 @@ public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> fact
     }
 
     [Fact]
-    public void Create_AsNotLoggedInUser_Returns401Unauthorized()
+    public async Task Create_AsNotLoggedInUser_Returns401Unauthorized()
     {
         // Arrange
         var client = factory.CreateClient();
@@ -209,9 +209,11 @@ public class FilmsApiControllerTests(ExtendedWebApplicationFactory<Program> fact
         };
 
         // Act
-        var response = client.PostAsJsonAsync("/api/films", dto).Result;
+        var response = await client.PostAsJsonAsync("/api/films", dto);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    #endregion
 }

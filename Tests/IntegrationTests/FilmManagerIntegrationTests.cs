@@ -9,6 +9,8 @@ namespace FilmManagement.UI.MVC.Tests.IntegrationTests;
 public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> factory)
     : IClassFixture<ExtendedWebApplicationFactory<Program>>
 {
+    #region AddFilm
+
     [Fact]
     public void AddFilm_IsStored_GivenValidData()
     {
@@ -21,10 +23,9 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         // Act
         var film = mgr.AddFilm(title, Genre.Drama, new DateTime(2020, 1, 1), 7.5, null, null);
 
-        // Assert — object returned with a real ID
+        // Assert
         Assert.NotEqual(Guid.Empty, film.ImdbId);
 
-        // DB check — query via the context in the same scope
         var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
         var stored = ctx.Films.SingleOrDefault(f => f.ImdbId == film.ImdbId);
         Assert.NotNull(stored);
@@ -39,7 +40,7 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         using var scope = factory.Services.CreateScope();
         var mgr = scope.ServiceProvider.GetService<IManager>();
 
-        string invalidTitle = "AB"; // minimum is 3 characters
+        string invalidTitle = "AB";
 
         // Act
         var exception = Record.Exception(() =>
@@ -48,7 +49,6 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         // Assert
         Assert.IsType<ValidationException>(exception);
 
-        // DB check — nothing should have been written
         var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
         var stored = ctx.Films.SingleOrDefault(f => f.Title == invalidTitle);
         Assert.Null(stored);
@@ -86,11 +86,14 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         // Assert
         Assert.IsType<ValidationException>(exception);
 
-        // DB check — only one record with this title should exist
         var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
         var count = ctx.Films.Count(f => f.Title == title);
         Assert.Equal(1, count);
     }
+
+    #endregion
+
+    #region ChangeFilm
 
     [Fact]
     public void ChangeFilm_IsStored_GivenValidFilm()
@@ -106,9 +109,9 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         // Act
         mgr.ChangeFilm(film);
 
-        // Assert — DB check in same scope
+        // Assert
         var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
-        ctx.ChangeTracker.Clear(); // clear the local cache so we read from DB
+        ctx.ChangeTracker.Clear();
         var updated = ctx.Films.Single(f => f.ImdbId == film.ImdbId);
         Assert.Equal("UPDATED from TEST", updated.Title);
         Assert.Equal(9.0, updated.Rating);
@@ -122,7 +125,7 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         var mgr = scope.ServiceProvider.GetService<IManager>();
 
         var film = mgr.AddFilm("Valid Title", Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null);
-        string invalidTitle = "AB"; // too short
+        string invalidTitle = "AB";
 
         film.Title = invalidTitle;
 
@@ -132,10 +135,11 @@ public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> 
         // Assert
         Assert.IsType<ValidationException>(exception);
 
-        // DB check — title must not have changed
         var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
         ctx.ChangeTracker.Clear();
         var stored = ctx.Films.Single(f => f.ImdbId == film.ImdbId);
         Assert.NotEqual(invalidTitle, stored.Title);
     }
+
+    #endregion
 }

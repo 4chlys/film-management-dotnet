@@ -286,4 +286,50 @@ Transfer-Encoding: chunked
   "careerEnd": null
 }
 ```
+
 ---
+
+## Sprint 8
+
+### Running the tests
+
+```shell
+dotnet test
+```
+
+### Code coverage
+
+Run tests with code coverage and generate an HTML report:
+
+```shell
+dotnet test --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coveragereport" -reporttypes:Html
+```
+
+![Code coverage](coverage.png)
+
+### Complex authorization requirements
+
+The complex authorization requirements (role-based + ownership logic) are tested in:
+
+`FilmManagement.UI.MVC.Tests.IntegrationTests.FilmsApiControllerTests`
+
+This class covers the custom `film.Maintainer?.Id == currentUser?.Id || isAdmin` logic on the
+`UpdateRating` and `Delete` endpoints, verifying 401, 403, maintainer access, and admin override.
+
+### Verification (mock)
+
+Mock verification (`Verify` / `VerifyAll`) is used in:
+
+`FilmManagement.UI.MVC.Tests.UnitTests.FilmManagerUnitTests`
+
+Every test in this class asserts whether `IRepository` methods were or were not called,
+using `.Verifiable(Times.Never)` and `.Verifiable(Times.Exactly(1))` followed by `_mock.VerifyAll()`.
+
+### Pipeline — Tests tab
+
+[View passing pipeline Tests tab](https://gitlab.com/your-username/your-repo/-/pipelines/YOUR_PIPELINE_ID/tests)
+
+### Pipeline — Code coverage report
+
+[View code coverage report](https://gitlab.com/your-username/your-repo/-/jobs/YOUR_JOB_ID/artifacts/file/coveragereport/index.html)
