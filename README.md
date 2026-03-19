@@ -328,8 +328,8 @@ using `.Verifiable(Times.Never)` and `.Verifiable(Times.Exactly(1))` followed by
 
 ### Pipeline — Tests tab
 
-[View passing pipeline Tests tab](https://gitlab.com/your-username/your-repo/-/pipelines/YOUR_PIPELINE_ID/tests)
+[View passing pipeline Tests tab](https://gitlab.com/kdg-ti/programmeren-2-dotnet/25-26/inf202/projects/romeo.weyns/-/pipelines/2396490617/test_report?job_name=tests)
 
 ### Pipeline — Code coverage report
 
-[View code coverage report](https://gitlab.com/your-username/your-repo/-/jobs/YOUR_JOB_ID/artifacts/file/coveragereport/index.html)
+[View code coverage report](https://gitlab.com/kdg-ti/programmeren-2-dotnet/25-26/inf202/projects/romeo.weyns/-/jobs/13568863539/artifacts/browse/Tests/TestResults/CoverageReport/)
