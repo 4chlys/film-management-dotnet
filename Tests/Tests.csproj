@@ -26,9 +26,5 @@
         <ProjectReference Include="..\UI-MVC\UI-MVC.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="IntegrationTests\" />
-    </ItemGroup>
-
 </Project>
 
