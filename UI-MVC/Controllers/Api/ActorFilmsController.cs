@@ -10,7 +10,7 @@ namespace FilmManagement.UI.Web.Controllers.Api;
 [Route("api/[controller]")]
 public class ActorFilmsController(IManager manager) : ControllerBase
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpPost]
     public ActionResult Create(NewActorFilmDto dto)
     {

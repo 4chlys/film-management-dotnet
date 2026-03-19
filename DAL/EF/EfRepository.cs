@@ -103,7 +103,11 @@ public class EfRepository(FilmDbContext context) : IRepository
     
     public ActorFilm ReadActorFilm(Guid actorId, Guid filmId)
     {
-        return context.ActorFilms.SingleOrDefault(af => af.Actor.ImdbId == actorId && af.Film.ImdbId == filmId);
+        return context.ActorFilms
+            .Include(af => af.Actor)
+            .Include(af => af.Film)
+            .SingleOrDefault(af => 
+                af.Actor.ImdbId == actorId && af.Film.ImdbId == filmId);
     }
 
     public void UpdateActorFilm(ActorFilm actorFilm)
