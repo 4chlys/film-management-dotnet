@@ -14,14 +14,15 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 
 var connectionString = builder.Configuration.GetConnectionString("FilmDbContextConnection")
-    ?? throw new InvalidOperationException("Connection string 'FilmDbContextConnection' not found.");
+                       ?? throw new InvalidOperationException("Connection string 'FilmDbContextConnection' not found.");
 
 builder.Services.AddDbContext<FilmDbContext>(optionsBuilder =>
     optionsBuilder.UseSqlite(connectionString));
 
 builder.Services.AddScoped<IRepository, EfRepository>();
 builder.Services.AddScoped<IManager, Manager>();
-builder.Services.AddLiveMonitoring();
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddLiveMonitoring();
 
 builder.Services.AddControllersWithViews()
     .AddXmlDataContractSerializerFormatters()
@@ -29,10 +30,7 @@ builder.Services.AddControllersWithViews()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
 
 builder.Services
-    .AddDefaultIdentity<IdentityUser>(options =>
-    {
-        options.SignIn.RequireConfirmedAccount = false;
-    })
+    .AddDefaultIdentity<IdentityUser>(options => { options.SignIn.RequireConfirmedAccount = false; })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<FilmDbContext>();
 
@@ -46,6 +44,7 @@ builder.Services.ConfigureApplicationCookie(options =>
             context.Response.StatusCode = 401;
             return Task.CompletedTask;
         }
+
         return defaultOnRedirectToLogin(context);
     };
 
@@ -57,6 +56,7 @@ builder.Services.ConfigureApplicationCookie(options =>
             context.Response.StatusCode = 403;
             return Task.CompletedTask;
         }
+
         return defaultOnRedirectToAccessDenied(context);
     };
 });
@@ -86,7 +86,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseAndMapLiveMonitoring();
+if (!builder.Environment.IsEnvironment("Testing"))
+    app.UseAndMapLiveMonitoring();
 app.UseHttpsRedirection();
 app.UseRouting();
 
@@ -104,4 +105,6 @@ app.MapRazorPages();
 
 app.Run();
 
-public partial class Program() {}
+public partial class Program()
+{
+}
