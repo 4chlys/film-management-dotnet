@@ -41,6 +41,11 @@ public class Manager(IRepository repository) : IManager
         return repository.ReadFilm(imdbId);
     }
 
+    public Film GetFilmWithMaintainer(Guid imdbId)
+    {
+        return repository.ReadFilmWithMaintainer(imdbId);
+    }
+    
     public Film GetFilmWithDirector(Guid imdbId)
     {
         return repository.ReadFilmWithDirector(imdbId);

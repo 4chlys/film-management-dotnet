@@ -18,6 +18,11 @@ public class EfRepository(FilmDbContext context) : IRepository
         return context.Films.Find(imdbId);
     }
 
+    public Film ReadFilmWithMaintainer(Guid imdbId)
+    {
+        return context.Films.SingleOrDefault(f => f.ImdbId == imdbId);
+    }
+    
     public Film ReadFilmWithDirector(Guid imdbId)
     {
         return context.Films

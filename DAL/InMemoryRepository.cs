@@ -23,6 +23,11 @@ public class InMemoryRepository : IRepository
         return InMemoryStorage.Films.SingleOrDefault(f => f.ImdbId == imdbId);       
     }
 
+    public Film ReadFilmWithMaintainer(Guid imdbId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Film ReadFilmWithDirector(Guid imdbId)
     {
         throw new NotImplementedException();

@@ -9,6 +9,7 @@ public interface IManager
 {
     Film AddFilm(string title, Genre genre, DateTime releaseDate, double rating, Director director, IdentityUser maintainer);
     Film GetFilm(Guid imdbId); 
+    Film GetFilmWithMaintainer(Guid imdbId);
     Film GetFilmWithDirector(Guid imdbId);
     Film GetFilmWithActorsAndDirectors(Guid imdbId);
     IEnumerable<Film> GetAllFilms();

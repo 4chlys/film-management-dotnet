@@ -7,6 +7,7 @@ public interface IRepository
 {
     void CreateFilm(Film film);
     Film ReadFilm(Guid imdbId);
+    Film ReadFilmWithMaintainer(Guid imdbId);
     Film ReadFilmWithDirector(Guid imdbId);
     Film ReadFilmWithActorsAndDirectors(Guid imdbId);
     IEnumerable<Film> ReadAllFilms();

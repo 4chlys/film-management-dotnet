@@ -22,14 +22,37 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
         ViewBag.CurrentUserId = userManager.GetUserId(User);
         return View(films);
     }
-    
+
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult Details(Guid id)
+    {
+        var film = manager.GetFilmWithActorsAndDirectors(id);
+        if (film == null)
+        {
+            return View("Error", new ErrorViewModel(
+                404, "Film Not Found",
+                $"The film with ID '{id}' could not be found. It may have been deleted or never existed."
+            ));
+        }
+
+        var vm = MapToDetailsViewModel(film);
+
+        if (TempData["ErrorMessage"] != null)
+            ViewBag.ErrorMessage = TempData["ErrorMessage"];
+
+        return View(vm);
+    }
+
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public IActionResult Create()
     {
         PopulateSelectLists();
         return View(new NewFilmViewModel());
     }
-    
+
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create(NewFilmViewModel model)
     {
@@ -42,16 +65,11 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
         try
         {
             var currentUser = await userManager.GetUserAsync(User);
-
             var film = manager.AddFilmWithActors(
-                model.Title,
-                model.Genre,
-                model.ReleaseDate,
-                model.Rating,
-                model.DirectorId,
-                model.SelectedActorIds ?? new List<Guid>(),
-                currentUser
-            );
+                model.Title, model.Genre, model.ReleaseDate, model.Rating,
+                model.DirectorId, model.SelectedActorIds ?? new List<Guid>(),
+                currentUser);
+
             return RedirectToAction(nameof(Details), new { id = film.ImdbId });
         }
         catch (ValidationException ex)
@@ -67,45 +85,20 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
             return View(model);
         }
     }
-    
-    [AllowAnonymous]
-    [HttpGet]
-    public IActionResult Details(Guid id)
-    {
-        var film = manager.GetFilmWithActorsAndDirectors(id);
-        if (film == null)
-        {
-            return View("Error", new ErrorViewModel(
-                404,
-                "Film Not Found",
-                $"The film with ID '{id}' could not be found. It may have been deleted or never existed."
-            ));
-        }
-
-        var vm = MapToDetailsViewModel(film);
-     
-        if (TempData["ErrorMessage"] != null)
-            ViewBag.ErrorMessage = TempData["ErrorMessage"];
-
-        return View(vm);
-    }
 
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id)
     {
         var film = manager.GetFilmWithActorsAndDirectors(id);
-        
         if (film == null)
         {
             return View("Error", new ErrorViewModel(
-                404,
-                "Film Not Found",
+                404, "Film Not Found",
                 $"Cannot edit film with ID '{id}' because it does not exist."
             ));
         }
 
         var currentUser = await userManager.GetUserAsync(User);
-    
         if (film.Maintainer?.Id != currentUser?.Id && !User.IsInRole("Admin"))
             return RedirectToPage("/Account/AccessDenied", new { Area = "Identity" });
 
@@ -113,7 +106,7 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
         PopulateSelectLists(vm.DirectorId);
         return View(vm);
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> Edit(Guid id, EditFilmViewModel vm)
     {
@@ -125,7 +118,7 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
 
         try
         {
-            var film = manager.GetFilm(id);
+            var film = manager.GetFilmWithMaintainer(id);
             if (film == null)
             {
                 return View("Error", new ErrorViewModel(
@@ -135,7 +128,6 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
             }
 
             var currentUser = await userManager.GetUserAsync(User);
-
             if (film.Maintainer?.Id != currentUser?.Id && !User.IsInRole("Admin"))
                 return RedirectToPage("/Account/AccessDenied", new { Area = "Identity" });
 
@@ -144,11 +136,7 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
             film.ReleaseDate = vm.ReleaseDate;
             film.Rating = vm.Rating;
 
-            manager.ChangeFilmWithActors(
-                film,
-                vm.DirectorId,
-                vm.SelectedActorIds ?? new List<Guid>()
-            );
+            manager.ChangeFilmWithActors(film, vm.DirectorId, vm.SelectedActorIds ?? new List<Guid>());
             return RedirectToAction(nameof(Details), new { id });
         }
         catch (ValidationException ex)
@@ -166,36 +154,42 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
     }
 
     [HttpGet]
-    public IActionResult Delete(Guid id)
+    public async Task<IActionResult> Delete(Guid id)
     {
-        var film = manager.GetFilm(id);
+        var film = manager.GetFilmWithMaintainer(id);
         if (film == null)
         {
             return View("Error", new ErrorViewModel(
-                404,
-                "Film Not Found",
+                404, "Film Not Found",
                 $"Cannot delete film with ID '{id}' because it does not exist."
             ));
         }
 
-        var vm = MapToDeleteViewModel(film);
-        return View(vm);
+        var currentUser = await userManager.GetUserAsync(User);
+        if (film.Maintainer?.Id != currentUser?.Id && !User.IsInRole("Admin"))
+            return RedirectToPage("/Account/AccessDenied", new { Area = "Identity" });
+
+        var fullFilm = manager.GetFilmWithActorsAndDirectors(id);
+        return View(MapToDeleteViewModel(fullFilm));
     }
 
     [HttpPost]
-    public IActionResult DeletePost(Guid id)
+    public async Task<IActionResult> DeletePost(Guid id)
     {
         try
         {
-            var film = manager.GetFilm(id);
+            var film = manager.GetFilmWithMaintainer(id);
             if (film == null)
             {
                 return View("Error", new ErrorViewModel(
-                    404,
-                    "Film Not Found",
+                    404, "Film Not Found",
                     $"Cannot delete film with ID '{id}' because it does not exist."
                 ));
             }
+
+            var currentUser = await userManager.GetUserAsync(User);
+            if (film.Maintainer?.Id != currentUser?.Id && !User.IsInRole("Admin"))
+                return RedirectToPage("/Account/AccessDenied", new { Area = "Identity" });
 
             manager.RemoveFilm(film);
             return RedirectToAction(nameof(Index));
@@ -226,84 +220,64 @@ public class FilmController(IManager manager, UserManager<IdentityUser> userMana
         return RedirectToAction(nameof(Details), new { id = filmId });
     }
 
-    private DetailsFilmViewModel MapToDetailsViewModel(BL.Domain.Film film)
+    private DetailsFilmViewModel MapToDetailsViewModel(BL.Domain.Film film) => new()
     {
-        return new DetailsFilmViewModel
-        {
-            ImdbId = film.ImdbId,
-            Title = film.Title,
-            Genre = film.Genre.ToDisplayString(),
-            ReleaseDate = film.ReleaseDate,
-            Rating = film.Rating,
-            MaintainerName = film.Maintainer?.UserName,
-            Director = film.Director == null ? null : new DetailsFilmViewModel.DirectorInfo
+        ImdbId = film.ImdbId,
+        Title = film.Title,
+        Genre = film.Genre.ToDisplayString(),
+        ReleaseDate = film.ReleaseDate,
+        Rating = film.Rating,
+        MaintainerName = film.Maintainer?.UserName,
+        Director = film.Director == null
+            ? null
+            : new DetailsFilmViewModel.DirectorInfo
             {
                 ImdbId = film.Director.ImdbId,
                 Name = film.Director.Name
             },
-            Actors = film.ActorFilms?
-                .Select(af => new DetailsFilmViewModel.ActorInfo
-                {
-                    ImdbId = af.Actor.ImdbId,
-                    Name = af.Actor.Name,
-                    DateOfBirth = af.Actor.DateOfBirth,
-                    ScreenTime = af.ScreenTime
-                })
-                .ToList() ?? []
-        };
-    }
+        Actors = film.ActorFilms?
+            .Select(af => new DetailsFilmViewModel.ActorInfo
+            {
+                ImdbId = af.Actor.ImdbId,
+                Name = af.Actor.Name,
+                DateOfBirth = af.Actor.DateOfBirth,
+                ScreenTime = af.ScreenTime
+            })
+            .ToList() ?? []
+    };
 
-    private EditFilmViewModel MapToEditViewModel(BL.Domain.Film film)
+    private EditFilmViewModel MapToEditViewModel(BL.Domain.Film film) => new()
     {
-        return new EditFilmViewModel
-        {
-            ImdbId = film.ImdbId,
-            Title = film.Title,
-            Genre = film.Genre,
-            ReleaseDate = film.ReleaseDate,
-            Rating = film.Rating,
-            DirectorId = film.Director?.ImdbId,
-            SelectedActorIds = film.ActorFilms?
-                .Select(af => af.Actor.ImdbId)
-                .ToList() ?? []
-        };
-    }
+        ImdbId = film.ImdbId,
+        Title = film.Title,
+        Genre = film.Genre,
+        ReleaseDate = film.ReleaseDate,
+        Rating = film.Rating,
+        DirectorId = film.Director?.ImdbId,
+        SelectedActorIds = film.ActorFilms?
+            .Select(af => af.Actor.ImdbId)
+            .ToList() ?? []
+    };
 
-    private DeleteFilmViewModel MapToDeleteViewModel(BL.Domain.Film film)
+    private DeleteFilmViewModel MapToDeleteViewModel(BL.Domain.Film film) => new()
     {
-        return new DeleteFilmViewModel
-        {
-            ImdbId = film.ImdbId,
-            Title = film.Title,
-            Genre = film.Genre.ToDisplayString(),
-            ReleaseDate = film.ReleaseDate,
-            Rating = film.Rating,
-            DirectorName = film.Director?.Name ?? "Unknown"
-        };
-    }
-    
+        ImdbId = film.ImdbId,
+        Title = film.Title,
+        Genre = film.Genre.ToDisplayString(),
+        ReleaseDate = film.ReleaseDate,
+        Rating = film.Rating,
+        DirectorName = film.Director?.Name ?? "Unknown"
+    };
+
     private void PopulateSelectLists(Guid? selectedDirectorId = null)
     {
-        ViewBag.Directors = new SelectList(
-            manager.GetAllDirectors(),
-            "ImdbId",
-            "Name",
-            selectedDirectorId
-        );
-
-        ViewBag.Actors = new SelectList(
-            manager.GetAllActors(),
-            "ImdbId",
-            "Name"
-        );
+        ViewBag.Directors = new SelectList(manager.GetAllDirectors(), "ImdbId", "Name", selectedDirectorId);
+        ViewBag.Actors = new SelectList(manager.GetAllActors(), "ImdbId", "Name");
     }
 
     private void AddValidationErrors(string errorMessage)
     {
-        var errors = errorMessage.Split('|', StringSplitOptions.RemoveEmptyEntries);
-        foreach (var error in errors)
-        {
+        foreach (var error in errorMessage.Split('|', StringSplitOptions.RemoveEmptyEntries))
             ModelState.AddModelError("", error.Trim());
-        }
     }
 }

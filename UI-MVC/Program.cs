@@ -4,7 +4,6 @@ using FilmManagement.BL;
 using FilmManagement.DAL;
 using FilmManagement.DAL.EF;
 using FilmManagement.UI.Web.Areas.Identity.Data;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -39,7 +38,7 @@ builder.Services
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    var defaultOnRedirect = options.Events.OnRedirectToLogin;
+    var defaultOnRedirectToLogin = options.Events.OnRedirectToLogin;
     options.Events.OnRedirectToLogin = context =>
     {
         if (context.Request.Path.StartsWithSegments("/api"))
@@ -47,10 +46,10 @@ builder.Services.ConfigureApplicationCookie(options =>
             context.Response.StatusCode = 401;
             return Task.CompletedTask;
         }
-        return defaultOnRedirect(context);
+        return defaultOnRedirectToLogin(context);
     };
 
-    var defaultOnForbidden = options.Events.OnRedirectToAccessDenied;
+    var defaultOnRedirectToAccessDenied = options.Events.OnRedirectToAccessDenied;
     options.Events.OnRedirectToAccessDenied = context =>
     {
         if (context.Request.Path.StartsWithSegments("/api"))
@@ -58,16 +57,14 @@ builder.Services.ConfigureApplicationCookie(options =>
             context.Response.StatusCode = 403;
             return Task.CompletedTask;
         }
-        return defaultOnForbidden(context);
+        return defaultOnRedirectToAccessDenied(context);
     };
 });
 
-builder.Services.AddAuthorization(options =>
-    options.AddPolicy("IsAdmin", policy => policy.RequireRole(nameof(UserRoleName.Admin))));
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// EF code first + seeding
 using (var scope = app.Services.CreateScope())
 {
     var ctx = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
