@@ -3,114 +3,139 @@ using FilmManagement.BL;
 using FilmManagement.BL.Domain;
 using FilmManagement.DAL.EF;
 using FilmManagement.UI.MVC.Tests.IntegrationTests.Config;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-
 
 namespace FilmManagement.UI.MVC.Tests.IntegrationTests;
 
-// Integration tests for Manager.AddFilm and Manager.ChangeFilm.
-// These tests run against a real in-memory SQLite database, exercising the full
-// BL → DAL → EF Core stack without touching the HTTP layer.
 public class FilmManagerIntegrationTests(ExtendedWebApplicationFactory<Program> factory)
     : IClassFixture<ExtendedWebApplicationFactory<Program>>
 {
     [Fact]
-    public void AddFilm_WithValidData_ShouldPersistFilmInDatabase()
+    public void AddFilm_IsStored_GivenValidData()
     {
         // Arrange
-        using var scope = factory.CreateDbContextScope<FilmDbContext>();
-        var manager = scope.DbContext.GetService<IManager>()
-                      ?? factory.Services.CreateScope().ServiceProvider.GetRequiredService<IManager>();
+        using var scope = factory.Services.CreateScope();
+        var mgr = scope.ServiceProvider.GetService<IManager>();
+
+        string title = "NEW from TEST";
 
         // Act
-        var film = manager.AddFilm(
-            title: "Integration Test Film",
-            genre: Genre.Drama,
-            releaseDate: new DateTime(2020, 1, 1),
-            rating: 7.5,
-            director: null,
-            maintainer: null);
+        var film = mgr.AddFilm(title, Genre.Drama, new DateTime(2020, 1, 1), 7.5, null, null);
 
-        // Assert — Guid must be populated and the record must exist in the DB
+        // Assert — object returned with a real ID
         Assert.NotEqual(Guid.Empty, film.ImdbId);
-        scope.DbContext.ChangeTracker.Clear();
-        var persisted = scope.DbContext.Films.Find(film.ImdbId);
-        Assert.NotNull(persisted);
-        Assert.Equal("Integration Test Film", persisted.Title);
-        Assert.Equal(Genre.Drama, persisted.Genre);
+
+        // DB check — query via the context in the same scope
+        var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
+        var stored = ctx.Films.SingleOrDefault(f => f.ImdbId == film.ImdbId);
+        Assert.NotNull(stored);
+        Assert.Equal(title, stored.Title);
+        Assert.Equal(Genre.Drama, stored.Genre);
     }
 
     [Fact]
-    public void AddFilm_WithDuplicateTitle_ShouldThrowValidationException()
+    public void AddFilm_NotStored_ThrowsValidationException_GivenTitleTooShort()
     {
         // Arrange
         using var scope = factory.Services.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
+        var mgr = scope.ServiceProvider.GetService<IManager>();
 
-        manager.AddFilm("Unique Title Once", Genre.Action, new DateTime(2020, 1, 1), 7.0, null, null);
-
-        // Act & Assert
-        Assert.Throws<ValidationException>(() =>
-            manager.AddFilm("Unique Title Once", Genre.Comedy, new DateTime(2021, 1, 1), 8.0, null, null));
-    }
-
-    [Fact]
-    public void AddFilm_WithTitleTooShort_ShouldThrowValidationException()
-    {
-        // Arrange
-        using var scope = factory.Services.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
-
-        // Act & Assert — title must be at least 3 characters
-        Assert.Throws<ValidationException>(() =>
-            manager.AddFilm("AB", Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null));
-    }
-
-    [Fact]
-    public void AddFilm_WithFutureReleaseDate_ShouldThrowValidationException()
-    {
-        // Arrange
-        using var scope = factory.Services.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
-
-        // Act & Assert — DateRange(mustBePast: true) rejects future dates
-        Assert.Throws<ValidationException>(() =>
-            manager.AddFilm("Future Film", Genre.Drama, DateTime.Now.AddYears(1), 7.0, null, null));
-    }
-
-    [Fact]
-    public void ChangeFilm_WithValidData_ShouldUpdateFilmInDatabase()
-    {
-        // Arrange
-        using var scope = factory.Services.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
-
-        var film = manager.AddFilm("Change Test Film", Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null);
+        string invalidTitle = "AB"; // minimum is 3 characters
 
         // Act
-        film.Title = "Change Test Film Updated";
-        film.Rating = 9.0;
-        manager.ChangeFilm(film);
+        var exception = Record.Exception(() =>
+            mgr.AddFilm(invalidTitle, Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null));
 
-        // Assert — use the DbContextScope to read back the persisted record
-        using var assertScope = factory.CreateDbContextScope<FilmDbContext>();
-        var updated = assertScope.DbContext.Films.Find(film.ImdbId);
-        Assert.Equal("Change Test Film Updated", updated?.Title);
-        Assert.Equal(9.0, updated?.Rating);
+        // Assert
+        Assert.IsType<ValidationException>(exception);
+
+        // DB check — nothing should have been written
+        var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
+        var stored = ctx.Films.SingleOrDefault(f => f.Title == invalidTitle);
+        Assert.Null(stored);
     }
 
     [Fact]
-    public void ChangeFilm_WithTitleTooShort_ShouldThrowValidationException()
+    public void AddFilm_NotStored_ThrowsValidationException_GivenFutureReleaseDate()
     {
         // Arrange
         using var scope = factory.Services.CreateScope();
-        var manager = scope.ServiceProvider.GetRequiredService<IManager>();
+        var mgr = scope.ServiceProvider.GetService<IManager>();
 
-        var film = manager.AddFilm("Short Change Film", Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null);
+        // Act
+        var exception = Record.Exception(() =>
+            mgr.AddFilm("Future Film", Genre.Drama, DateTime.Now.AddYears(1), 7.0, null, null));
 
-        // Act & Assert
-        film.Title = "AB";
-        Assert.Throws<ValidationException>(() => manager.ChangeFilm(film));
+        // Assert
+        Assert.IsType<ValidationException>(exception);
+    }
+
+    [Fact]
+    public void AddFilm_NotStored_ThrowsValidationException_GivenDuplicateTitle()
+    {
+        // Arrange
+        using var scope = factory.Services.CreateScope();
+        var mgr = scope.ServiceProvider.GetService<IManager>();
+
+        string title = "Duplicate Title";
+        mgr.AddFilm(title, Genre.Action, new DateTime(2020, 1, 1), 7.0, null, null);
+
+        // Act
+        var exception = Record.Exception(() =>
+            mgr.AddFilm(title, Genre.Comedy, new DateTime(2021, 1, 1), 8.0, null, null));
+
+        // Assert
+        Assert.IsType<ValidationException>(exception);
+
+        // DB check — only one record with this title should exist
+        var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
+        var count = ctx.Films.Count(f => f.Title == title);
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void ChangeFilm_IsStored_GivenValidFilm()
+    {
+        // Arrange
+        using var scope = factory.Services.CreateScope();
+        var mgr = scope.ServiceProvider.GetService<IManager>();
+
+        var film = mgr.AddFilm("Original Title", Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null);
+        film.Title = "UPDATED from TEST";
+        film.Rating = 9.0;
+
+        // Act
+        mgr.ChangeFilm(film);
+
+        // Assert — DB check in same scope
+        var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
+        ctx.ChangeTracker.Clear(); // clear the local cache so we read from DB
+        var updated = ctx.Films.Single(f => f.ImdbId == film.ImdbId);
+        Assert.Equal("UPDATED from TEST", updated.Title);
+        Assert.Equal(9.0, updated.Rating);
+    }
+
+    [Fact]
+    public void ChangeFilm_NotStored_ThrowsValidationException_GivenInvalidTitle()
+    {
+        // Arrange
+        using var scope = factory.Services.CreateScope();
+        var mgr = scope.ServiceProvider.GetService<IManager>();
+
+        var film = mgr.AddFilm("Valid Title", Genre.Drama, new DateTime(2020, 1, 1), 7.0, null, null);
+        string invalidTitle = "AB"; // too short
+
+        film.Title = invalidTitle;
+
+        // Act
+        var exception = Record.Exception(() => mgr.ChangeFilm(film));
+
+        // Assert
+        Assert.IsType<ValidationException>(exception);
+
+        // DB check — title must not have changed
+        var ctx = scope.ServiceProvider.GetService<FilmDbContext>();
+        ctx.ChangeTracker.Clear();
+        var stored = ctx.Films.Single(f => f.ImdbId == film.ImdbId);
+        Assert.NotEqual(invalidTitle, stored.Title);
     }
 }
